@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.skydoves.sandwich.ApiResponse
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +36,9 @@ import me.mudkip.moememos.R
 import me.mudkip.moememos.data.local.entity.ResourceEntity
 import me.mudkip.moememos.data.model.ResourceRepresentable
 import me.mudkip.moememos.ext.string
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeRadius
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.viewmodel.LocalMemos
 import me.mudkip.moememos.viewmodel.LocalUserState
 import okhttp3.OkHttpClient
@@ -51,6 +55,7 @@ fun Attachment(
     val memosViewModel = LocalMemos.current
     val userStateViewModel = LocalUserState.current
     val scope = rememberCoroutineScope()
+    val colors = MoeDesignTokens.colors
     var menuExpanded by remember { mutableStateOf(false) }
     var opening by remember { mutableStateOf(false) }
 
@@ -109,7 +114,28 @@ fun Attachment(
                 menuExpanded = true
             }
         },
-        label = { Text(resource.filename) },
+        shape = MoeRadius.shapeLg,
+        colors = AssistChipDefaults.assistChipColors(
+            containerColor = colors.bgSurface,
+            labelColor = colors.textPrimary,
+            leadingIconContentColor = colors.accentPrimary,
+            trailingIconContentColor = colors.textSecondary,
+            disabledContainerColor = colors.bgPressed,
+            disabledLabelColor = colors.textTertiary,
+            disabledLeadingIconContentColor = colors.textTertiary,
+        ),
+        border = AssistChipDefaults.assistChipBorder(
+            enabled = true,
+            borderColor = colors.strokeSubtle,
+            disabledBorderColor = colors.strokeSubtle,
+            borderWidth = 1.dp,
+        ),
+        label = {
+            Text(
+                text = resource.filename,
+                style = MoeTypography.label,
+            )
+        },
         leadingIcon = {
             Icon(
                 Icons.Outlined.Attachment,

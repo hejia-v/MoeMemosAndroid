@@ -5,6 +5,8 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -39,6 +41,8 @@ import com.mikepenz.markdown.model.markdownAnnotatorConfig
 import com.mikepenz.markdown.model.rememberMarkdownState
 import com.mikepenz.markdown.utils.getUnescapedTextInNode
 import org.intellij.markdown.MarkdownTokenTypes
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.util.findCustomTagMatches
 import me.mudkip.moememos.util.getCustomTagName
 import me.mudkip.moememos.util.isCustomTagSupportedNode
@@ -54,21 +58,40 @@ fun Markdown(
     selectable: Boolean = false,
     onTagClick: ((tag: String) -> Unit)? = null,
 ) {
+    val colors = MoeDesignTokens.colors
+
     fun withOptionalTextAlign(style: TextStyle): TextStyle {
         return if (textAlign == null) style else style.copy(textAlign = textAlign)
     }
 
-    val bodyTextStyle = withOptionalTextAlign(MaterialTheme.typography.bodyLarge)
-    val h1TextStyle = withOptionalTextAlign(MaterialTheme.typography.headlineLarge)
-    val h2TextStyle = withOptionalTextAlign(MaterialTheme.typography.headlineMedium)
-    val h3TextStyle = withOptionalTextAlign(MaterialTheme.typography.headlineSmall)
-    val h4TextStyle = withOptionalTextAlign(MaterialTheme.typography.titleLarge)
-    val h5TextStyle = withOptionalTextAlign(MaterialTheme.typography.titleMedium)
-    val h6TextStyle = withOptionalTextAlign(MaterialTheme.typography.titleSmall)
+    val bodyTextStyle = withOptionalTextAlign(MoeTypography.body.copy(color = colors.textPrimary))
+    val h1TextStyle = withOptionalTextAlign(MoeTypography.display.copy(color = colors.textPrimary))
+    val h2TextStyle = withOptionalTextAlign(MoeTypography.headline.copy(color = colors.textPrimary))
+    val h3TextStyle = withOptionalTextAlign(MoeTypography.title.copy(color = colors.textPrimary))
+    val h4TextStyle = withOptionalTextAlign(MoeTypography.title.copy(color = colors.textPrimary))
+    val h5TextStyle = withOptionalTextAlign(MoeTypography.label.copy(color = colors.textPrimary))
+    val h6TextStyle = withOptionalTextAlign(MoeTypography.label.copy(color = colors.textPrimary))
+    val markdownColorScheme = if (colors.bgApp.red < 0.5f) {
+        darkColorScheme(
+            primary = colors.accentPrimary,
+            surface = colors.bgSurface,
+            onSurface = colors.textPrimary,
+            onSurfaceVariant = colors.textSecondary,
+            outline = colors.strokeStrong,
+        )
+    } else {
+        lightColorScheme(
+            primary = colors.accentPrimary,
+            surface = colors.bgSurface,
+            onSurface = colors.textPrimary,
+            onSurfaceVariant = colors.textSecondary,
+            outline = colors.strokeStrong,
+        )
+    }
     val uriHandler = LocalUriHandler.current
     val tagLinkStyle = TextLinkStyles(
         style = SpanStyle(
-            color = MaterialTheme.colorScheme.primary,
+            color = colors.accentPrimary,
             textDecoration = TextDecoration.Underline,
         )
     )
@@ -101,92 +124,106 @@ fun Markdown(
     )
 
     val markdownContent: @Composable () -> Unit = {
-        M3Markdown(
-            markdownState = markdownState,
-            modifier = modifier,
-            imageTransformer = imageTransformer,
-            typography = markdownTypography(
-                h1 = h1TextStyle,
-                h2 = h2TextStyle,
-                h3 = h3TextStyle,
-                h4 = h4TextStyle,
-                h5 = h5TextStyle,
-                h6 = h6TextStyle,
-                text = bodyTextStyle,
-                paragraph = bodyTextStyle,
-                ordered = bodyTextStyle,
-                bullet = bodyTextStyle,
-                list = bodyTextStyle
-            ),
-            annotator = markdownAnnotator(
-                config = markdownAnnotatorConfig(eolAsNewLine = true),
-                annotate = { content, child ->
-                    if (child.type != MarkdownTokenTypes.TEXT) {
-                        return@markdownAnnotator false
-                    }
-                    if (!isCustomTagSupportedNode(child)) {
-                        return@markdownAnnotator false
-                    }
-                    val source = child.getUnescapedTextInNode(content)
-                    val tags = findCustomTagMatches(source).toList()
-                    if (tags.isEmpty()) {
-                        return@markdownAnnotator false
-                    }
-
-                    var cursor = 0
-                    tags.forEach { match ->
-                        val start = match.range.first
-                        val endInclusive = match.range.last
-                        if (start > cursor) {
-                            append(source.substring(cursor, start))
-                        }
-                        val tagRaw = getCustomTagName(match)
-                        withLink(
-                            LinkAnnotation.Url(
-                                url = TAG_LINK_PREFIX + Uri.encode(tagRaw),
-                                styles = tagLinkStyle,
-                                linkInteractionListener = tagLinkListener
-                            )
-                        ) {
-                            append(match.value)
-                        }
-                        cursor = endInclusive + 1
-                    }
-                    if (cursor < source.length) {
-                        append(source.substring(cursor))
-                    }
-                    true
-                }
-            ),
-            components = markdownComponents(
-                codeFence = highlightedCodeFence,
-                codeBlock = highlightedCodeBlock,
-                checkbox = {
-                    val node = it.node
-                    MarkdownCheckBox(
-                        content = it.content,
-                        node = it.node,
-                        style = it.typography.text,
-                        checkedIndicator = { checked, modifier ->
-                            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
-                                Checkbox(
-                                    checked = checked,
-                                    onCheckedChange = if (checkboxChange != null) {
-                                        { checkboxChange(!checked, node.startOffset, node.endOffset) }
-                                    } else {
-                                        null
-                                    },
-                                    modifier = modifier.semantics {
-                                        role = Role.Checkbox
-                                        stateDescription = if (checked) "Checked" else "Unchecked"
-                                    },
-                                )
-                            }
-                        }
-                    )
-                }
+        MaterialTheme(
+            colorScheme = markdownColorScheme,
+            typography = MaterialTheme.typography.copy(
+                bodyLarge = bodyTextStyle,
+                bodyMedium = bodyTextStyle,
+                headlineLarge = h1TextStyle,
+                headlineMedium = h2TextStyle,
+                headlineSmall = h3TextStyle,
+                titleLarge = h4TextStyle,
+                titleMedium = h5TextStyle,
+                titleSmall = h6TextStyle,
             )
-        )
+        ) {
+            M3Markdown(
+                markdownState = markdownState,
+                modifier = modifier,
+                imageTransformer = imageTransformer,
+                typography = markdownTypography(
+                    h1 = h1TextStyle,
+                    h2 = h2TextStyle,
+                    h3 = h3TextStyle,
+                    h4 = h4TextStyle,
+                    h5 = h5TextStyle,
+                    h6 = h6TextStyle,
+                    text = bodyTextStyle,
+                    paragraph = bodyTextStyle,
+                    ordered = bodyTextStyle,
+                    bullet = bodyTextStyle,
+                    list = bodyTextStyle
+                ),
+                annotator = markdownAnnotator(
+                    config = markdownAnnotatorConfig(eolAsNewLine = true),
+                    annotate = { content, child ->
+                        if (child.type != MarkdownTokenTypes.TEXT) {
+                            return@markdownAnnotator false
+                        }
+                        if (!isCustomTagSupportedNode(child)) {
+                            return@markdownAnnotator false
+                        }
+                        val source = child.getUnescapedTextInNode(content)
+                        val tags = findCustomTagMatches(source).toList()
+                        if (tags.isEmpty()) {
+                            return@markdownAnnotator false
+                        }
+
+                        var cursor = 0
+                        tags.forEach { match ->
+                            val start = match.range.first
+                            val endInclusive = match.range.last
+                            if (start > cursor) {
+                                append(source.substring(cursor, start))
+                            }
+                            val tagRaw = getCustomTagName(match)
+                            withLink(
+                                LinkAnnotation.Url(
+                                    url = TAG_LINK_PREFIX + Uri.encode(tagRaw),
+                                    styles = tagLinkStyle,
+                                    linkInteractionListener = tagLinkListener
+                                )
+                            ) {
+                                append(match.value)
+                            }
+                            cursor = endInclusive + 1
+                        }
+                        if (cursor < source.length) {
+                            append(source.substring(cursor))
+                        }
+                        true
+                    }
+                ),
+                components = markdownComponents(
+                    codeFence = highlightedCodeFence,
+                    codeBlock = highlightedCodeBlock,
+                    checkbox = {
+                        val node = it.node
+                        MarkdownCheckBox(
+                            content = it.content,
+                            node = it.node,
+                            style = it.typography.text,
+                            checkedIndicator = { checked, modifier ->
+                                CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+                                    Checkbox(
+                                        checked = checked,
+                                        onCheckedChange = if (checkboxChange != null) {
+                                            { checkboxChange(!checked, node.startOffset, node.endOffset) }
+                                        } else {
+                                            null
+                                        },
+                                        modifier = modifier.semantics {
+                                            role = Role.Checkbox
+                                            stateDescription = if (checked) "Checked" else "Unchecked"
+                                        },
+                                    )
+                                }
+                            }
+                        )
+                    }
+                )
+            )
+        }
     }
 
     if (selectable) {

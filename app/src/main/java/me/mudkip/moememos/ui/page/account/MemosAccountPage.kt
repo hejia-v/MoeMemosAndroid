@@ -7,14 +7,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -32,6 +29,11 @@ import me.mudkip.moememos.data.api.MemosProfile
 import me.mudkip.moememos.data.model.MemosAccount
 import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ui.component.MemosIcon
+import me.mudkip.moememos.ui.designsystem.component.MoeCard
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeRadius
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 
@@ -47,6 +49,7 @@ fun MemosAccountPage(
     onSignOut: () -> Unit
 ) {
     val context = LocalContext.current
+    val colors = MoeDesignTokens.colors
     val accountHost = account.host.toHttpUrlOrNull()?.host.orEmpty()
     val accountName = account.name.ifBlank { accountHost }
     val accountAvatarUrl = resolveAvatarUrl(account.host, account.avatarUrl)
@@ -62,22 +65,32 @@ fun MemosAccountPage(
             .build()
     }
 
-    LazyColumn(contentPadding = innerPadding) {
+    LazyColumn(
+        contentPadding = PaddingValues(
+            start = MoeSpacing.xl,
+            top = innerPadding.calculateTopPadding() + MoeSpacing.sm,
+            end = MoeSpacing.xl,
+            bottom = innerPadding.calculateBottomPadding() + MoeSpacing.xxxl,
+        )
+    ) {
         item {
-            Card(
+            MoeCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(15.dp)
+                    .padding(bottom = MoeSpacing.md),
+                contentPadding = PaddingValues(MoeSpacing.xl),
+                containerColor = colors.bgSurface,
             ) {
-                Column(Modifier.padding(15.dp)) {
+                Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (accountAvatarUrl.isNullOrBlank()) {
                             Icon(
                                 imageVector = Icons.Outlined.AccountCircle,
                                 contentDescription = null,
                                 modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(CircleShape),
+                                    .size(MoeSpacing.xxxl)
+                                    .clip(MoeRadius.shapeFull),
+                                tint = colors.accentPrimary,
                             )
                         } else {
                             AsyncImage(
@@ -85,39 +98,41 @@ fun MemosAccountPage(
                                 imageLoader = imageLoader,
                                 contentDescription = null,
                                 modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(CircleShape),
+                                    .size(MoeSpacing.xxxl)
+                                    .clip(MoeRadius.shapeFull),
                             )
                         }
-                        Column(Modifier.padding(start = 10.dp)) {
+                        Column(Modifier.padding(start = MoeSpacing.md)) {
                             Text(
                                 accountName,
-                                style = MaterialTheme.typography.headlineSmall
+                                style = MoeTypography.headline,
+                                color = colors.textPrimary,
                             )
                             Text(
                                 accountHost,
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.outline
+                                style = MoeTypography.body,
+                                color = colors.textSecondary,
                             )
                         }
                     }
                     if (profile?.version?.isNotEmpty() == true) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = 8.dp),
+                            modifier = Modifier.padding(top = MoeSpacing.md),
                         ) {
                             Icon(
                                 imageVector = MemosIcon,
                                 contentDescription = null,
                                 modifier = Modifier
-                                    .padding(end = 8.dp)
-                                    .clip(CircleShape),
+                                    .padding(end = MoeSpacing.sm)
+                                    .clip(MoeRadius.shapeFull),
+                                tint = colors.textSecondary,
                             )
                             Text(
                                 "memos v${profile.version}",
                                 modifier = Modifier.padding(top = 5.dp),
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.outline
+                                style = MoeTypography.caption,
+                                color = colors.textTertiary,
                             )
                         }
                     }
@@ -129,10 +144,14 @@ fun MemosAccountPage(
             item {
                 FilledTonalButton(
                     onClick = onSwitchAccount,
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = colors.accentSoft,
+                        contentColor = colors.accentPrimary,
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 10.dp),
-                    contentPadding = PaddingValues(10.dp)
+                        .padding(bottom = MoeSpacing.sm),
+                    contentPadding = PaddingValues(MoeSpacing.md)
                 ) {
                     Text(R.string.switch_account.string)
                 }
@@ -143,13 +162,13 @@ fun MemosAccountPage(
             FilledTonalButton(
                 onClick = onSignOut,
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.error
+                    containerColor = colors.bgPressed,
+                    contentColor = colors.accentDanger
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
-                contentPadding = PaddingValues(10.dp)
+                    .padding(top = MoeSpacing.sm),
+                contentPadding = PaddingValues(MoeSpacing.md)
             ) {
                 Text(R.string.sign_out.string)
             }

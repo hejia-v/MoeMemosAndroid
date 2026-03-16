@@ -1,19 +1,32 @@
 package me.mudkip.moememos.ui.page.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeMotion
+import me.mudkip.moememos.ui.designsystem.token.MoeElevation
+import me.mudkip.moememos.ui.designsystem.token.MoeRadius
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 
 @Composable
 fun SettingItem(
@@ -22,24 +35,58 @@ fun SettingItem(
     trailingIcon: @Composable (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
-    Surface(onClick = onClick) {
+    val colors = MoeDesignTokens.colors
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.985f else 1f,
+        animationSpec = tween(
+            durationMillis = if (pressed) {
+                MoeMotion.fast.inWholeMilliseconds.toInt()
+            } else {
+                MoeMotion.normal.inWholeMilliseconds.toInt()
+            }
+        ),
+        label = "setting_item_scale"
+    )
+
+    Card(
+        onClick = onClick,
+        interactionSource = interactionSource,
+        shape = MoeRadius.shapeLg,
+        colors = CardDefaults.cardColors(
+            containerColor = colors.bgSurface,
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = MoeElevation.raised,
+        ),
+        modifier = Modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .fillMaxWidth()
+            .padding(horizontal = MoeSpacing.xl, vertical = MoeSpacing.xs)
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp, 10.dp),
+                .padding(horizontal = MoeSpacing.xl, vertical = MoeSpacing.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 icon,
                 contentDescription = text,
-                modifier = Modifier.padding(start = 8.dp, end = 16.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                modifier = Modifier
+                    .background(colors.accentSoft, MoeRadius.shapeMd)
+                    .padding(MoeSpacing.sm),
+                tint = colors.accentPrimary
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(MoeSpacing.lg))
             Text(
                 text,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                style = MoeTypography.title,
+                color = colors.textPrimary
             )
             if (trailingIcon != null) {
                 Spacer(modifier = Modifier.weight(1f))

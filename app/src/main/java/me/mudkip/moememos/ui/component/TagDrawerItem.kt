@@ -13,6 +13,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.ui.page.common.RouteName
 import java.net.URLEncoder
 
@@ -24,9 +27,15 @@ fun TagDrawerItem(
     drawerState: DrawerState? = null
 ) {
     val scope = rememberCoroutineScope()
+    val colors = MoeDesignTokens.colors
 
     NavigationDrawerItem(
-        label = { Text(tag) },
+        label = {
+            Text(
+                text = tag,
+                style = MoeTypography.body,
+            )
+        },
         icon = { Icon(Icons.Outlined.Tag, contentDescription = null) },
         selected = selected,
         onClick = {
@@ -38,6 +47,17 @@ fun TagDrawerItem(
                 drawerState?.close()
             }
         },
-        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+        colors = NavigationDrawerItemDefaults.colors(
+            selectedContainerColor = colors.accentSoft,
+            unselectedContainerColor = colors.bgApp,
+            selectedTextColor = colors.textPrimary,
+            unselectedTextColor = colors.textSecondary,
+            selectedIconColor = colors.accentPrimary,
+            unselectedIconColor = colors.textTertiary,
+        ),
+        modifier = Modifier.padding(
+            horizontal = MoeSpacing.lg,
+            vertical = MoeSpacing.xs,
+        )
     )
 }

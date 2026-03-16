@@ -1,7 +1,10 @@
 package me.mudkip.moememos.ui.page.memos
 
 import android.net.Uri
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import me.mudkip.moememos.R
 import me.mudkip.moememos.data.model.Account
@@ -33,6 +37,10 @@ import me.mudkip.moememos.data.model.Settings
 import me.mudkip.moememos.ext.settingsDataStore
 import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ui.component.MemosCard
+import me.mudkip.moememos.ui.designsystem.component.MoeCard
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.ui.page.common.LocalRootNavController
 import me.mudkip.moememos.ui.page.common.RouteName
 import me.mudkip.moememos.viewmodel.LocalMemos
@@ -49,12 +57,14 @@ fun MemosList(
     searchString: String? = null,
     onRefresh: (suspend () -> Unit)? = null,
     onTagClick: ((String) -> Unit)? = null,
+    headerContent: (@Composable () -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val navController = LocalRootNavController.current
     val viewModel = LocalMemos.current
     val userStateViewModel = LocalUserState.current
     val currentAccount by userStateViewModel.currentAccount.collectAsState()
+    val colors = MoeDesignTokens.colors
     val settings by context.settingsDataStore.data.collectAsState(initial = Settings())
     val editGesture = settings.usersList
         .firstOrNull { it.accountKey == settings.currentUser }
@@ -119,8 +129,49 @@ fun MemosList(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            state = lazyListState
+            state = lazyListState,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = PaddingValues(
+                top = MoeSpacing.sm,
+                bottom = MoeSpacing.xxxl,
+            )
         ) {
+            if (headerContent != null) {
+                item(key = "header") {
+                    Column {
+                        headerContent()
+                    }
+                }
+            }
+
+            if (filteredMemos.isEmpty()) {
+                item(key = "empty") {
+                    MoeCard(
+                        modifier = Modifier
+                            .padding(horizontal = MoeSpacing.xl, vertical = MoeSpacing.sm)
+                            .fillMaxWidth(),
+                        contentPadding = PaddingValues(
+                            horizontal = MoeSpacing.xl,
+                            vertical = MoeSpacing.xxl,
+                        )
+                    ) {
+                        Column {
+                            Text(
+                                text = R.string.no_memos.string,
+                                style = MoeTypography.title,
+                                color = colors.textPrimary,
+                            )
+                            Text(
+                                text = R.string.memos_home_subtitle.string,
+                                style = MoeTypography.body,
+                                color = colors.textSecondary,
+                                modifier = Modifier.padding(top = MoeSpacing.sm),
+                            )
+                        }
+                    }
+                }
+            }
+
             items(filteredMemos, key = { it.identifier }) { memo ->
                 MemosCard(
                     memo = memo,

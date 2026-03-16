@@ -11,7 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -28,6 +27,8 @@ import me.mudkip.moememos.data.model.Account
 import me.mudkip.moememos.data.model.MemosAccount
 import me.mudkip.moememos.ext.popBackStackIfLifecycleIsResumed
 import me.mudkip.moememos.ext.string
+import me.mudkip.moememos.ui.designsystem.component.MoeAppBar
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.ui.page.common.RouteName
 import me.mudkip.moememos.viewmodel.AccountViewModel
 import me.mudkip.moememos.viewmodel.LocalUserState
@@ -53,6 +54,7 @@ fun AccountPage(
     val isLocalAccount = selectedAccountKey == Account.Local().accountKey() || selectedAccount is Account.Local
     val showSwitchAccountButton = selectedAccountKey != currentAccount?.accountKey()
     val coroutineScope = rememberCoroutineScope()
+    val colors = MoeDesignTokens.colors
     val exportLauncher = rememberLauncherForActivityResult(CreateDocument("application/zip")) { uri ->
         if (uri == null) {
             return@rememberLauncherForActivityResult
@@ -69,16 +71,17 @@ fun AccountPage(
     }
 
     Scaffold(
+        containerColor = colors.bgApp,
         topBar = {
-            TopAppBar(
-                title = { Text(text = R.string.account_detail.string) },
+            MoeAppBar(
+                title = R.string.account_detail.string,
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.popBackStackIfLifecycleIsResumed(lifecycleOwner)
                     }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = R.string.back.string)
                     }
-                },
+                }
             )
         },
     ) { innerPadding ->

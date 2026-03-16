@@ -17,7 +17,6 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Text
@@ -39,6 +38,10 @@ import kotlinx.coroutines.launch
 import me.mudkip.moememos.R
 import me.mudkip.moememos.data.model.Account
 import me.mudkip.moememos.ext.string
+import me.mudkip.moememos.ui.designsystem.component.MoeCard
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.ui.page.common.LocalRootNavController
 import me.mudkip.moememos.ui.page.common.RouteName
 import me.mudkip.moememos.viewmodel.LocalMemos
@@ -71,6 +74,15 @@ fun SideDrawer(
     val rootNavController = LocalRootNavController.current
     val navBackStackEntry by memosNavController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    val colors = MoeDesignTokens.colors
+    val drawerItemColors = NavigationDrawerItemDefaults.colors(
+        selectedContainerColor = colors.accentSoft,
+        unselectedContainerColor = colors.bgApp,
+        selectedTextColor = colors.textPrimary,
+        unselectedTextColor = colors.textSecondary,
+        selectedIconColor = colors.accentPrimary,
+        unselectedIconColor = colors.textTertiary,
+    )
 
     fun isSelected(route: String): Boolean {
         return currentDestination?.hierarchy?.any { it.route == route } == true
@@ -86,34 +98,47 @@ fun SideDrawer(
 
     LazyColumn {
         item {
-            Stats()
+            Stats(
+                modifier = Modifier.padding(
+                    start = MoeSpacing.lg,
+                    end = MoeSpacing.lg,
+                    top = MoeSpacing.lg,
+                )
+            )
         }
 
         item {
-            Row(
+            MoeCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
-                    .padding(10.dp),
+                    .padding(horizontal = MoeSpacing.lg, vertical = MoeSpacing.md),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(MoeSpacing.lg),
+                containerColor = colors.bgSurface,
             ) {
-                Column(
+                Row(
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .padding(end = 5.dp),
-                    verticalArrangement = Arrangement.SpaceBetween
+                        .fillMaxWidth()
+                        .height(120.dp),
                 ) {
-                    Text(weekDays[0],
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline)
-                    Text(weekDays[3],
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline)
-                    Text(weekDays[6],
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline)
-                }
-                if (showHeatMap) {
-                    Heatmap()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(end = MoeSpacing.sm),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(weekDays[0],
+                            style = MoeTypography.caption,
+                            color = colors.textTertiary)
+                        Text(weekDays[3],
+                            style = MoeTypography.caption,
+                            color = colors.textTertiary)
+                        Text(weekDays[6],
+                            style = MoeTypography.caption,
+                            color = colors.textTertiary)
+                    }
+                    if (showHeatMap) {
+                        Heatmap()
+                    }
                 }
             }
         }
@@ -121,13 +146,14 @@ fun SideDrawer(
         item {
             Text(
                 R.string.moe_memos.string,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(20.dp)
+                style = MoeTypography.title,
+                color = colors.textPrimary,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
             )
         }
         item {
             NavigationDrawerItem(
-                label = { Text(R.string.memos.string) },
+                label = { Text(R.string.memos.string, style = MoeTypography.body) },
                 icon = { Icon(Icons.Outlined.GridView, contentDescription = null) },
                 selected = isSelected(RouteName.MEMOS),
                 onClick = {
@@ -139,13 +165,14 @@ fun SideDrawer(
                         drawerState?.close()
                     }
                 },
+                colors = drawerItemColors,
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
             )
         }
         if (hasExplore) {
             item {
                 NavigationDrawerItem(
-                    label = { Text(R.string.explore.string) },
+                    label = { Text(R.string.explore.string, style = MoeTypography.body) },
                     icon = { Icon(Icons.Outlined.Home, contentDescription = null) },
                     selected = isSelected(RouteName.EXPLORE),
                     onClick = {
@@ -157,13 +184,14 @@ fun SideDrawer(
                             drawerState?.close()
                         }
                     },
+                    colors = drawerItemColors,
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
             }
         }
         item {
             NavigationDrawerItem(
-                label = { Text(R.string.resources.string) },
+                label = { Text(R.string.resources.string, style = MoeTypography.body) },
                 icon = { Icon(Icons.Outlined.PhotoLibrary, contentDescription = null) },
                 selected = false,
                 onClick = {
@@ -172,12 +200,13 @@ fun SideDrawer(
                         rootNavController.navigate(RouteName.RESOURCE)
                     }
                 },
+                colors = drawerItemColors,
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
             )
         }
         item {
             NavigationDrawerItem(
-                label = { Text(R.string.archived.string) },
+                label = { Text(R.string.archived.string, style = MoeTypography.body) },
                 icon = { Icon(Icons.Outlined.Inventory2, contentDescription = null) },
                 selected = isSelected(RouteName.ARCHIVED),
                 onClick = {
@@ -189,12 +218,13 @@ fun SideDrawer(
                         drawerState?.close()
                     }
                 },
+                colors = drawerItemColors,
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
             )
         }
         item {
             NavigationDrawerItem(
-                label = { Text(R.string.settings.string) },
+                label = { Text(R.string.settings.string, style = MoeTypography.body) },
                 icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
                 selected = false,
                 onClick = {
@@ -203,19 +233,24 @@ fun SideDrawer(
                         rootNavController.navigate(RouteName.SETTINGS)
                     }
                 },
+                colors = drawerItemColors,
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
             )
         }
 
         item {
-            HorizontalDivider(Modifier.padding(vertical = 10.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = MoeSpacing.lg),
+                color = colors.strokeSubtle
+            )
         }
 
         item {
             Text(
                 R.string.tags.string,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(20.dp)
+                style = MoeTypography.title,
+                color = colors.textPrimary,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
             )
         }
 

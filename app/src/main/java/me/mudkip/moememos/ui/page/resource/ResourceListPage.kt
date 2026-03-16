@@ -22,7 +22,6 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +39,11 @@ import me.mudkip.moememos.ext.popBackStackIfLifecycleIsResumed
 import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ui.component.Attachment
 import me.mudkip.moememos.ui.component.MemoImage
+import me.mudkip.moememos.ui.designsystem.component.MoeAppBar
+import me.mudkip.moememos.ui.designsystem.component.MoeCard
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.viewmodel.ResourceListViewModel
 
 private enum class ResourceFilter {
@@ -57,18 +61,20 @@ fun ResourceListPage(
     var selectedFilter by rememberSaveable { mutableStateOf(ResourceFilter.IMAGE) }
     val imageResources = viewModel.resources.filter { it.mimeType?.startsWith("image/") == true }
     val otherResources = viewModel.resources.filterNot { it.mimeType?.startsWith("image/") == true }
+    val colors = MoeDesignTokens.colors
 
     Scaffold(
+        containerColor = colors.bgApp,
         topBar = {
-            TopAppBar(
-                title = { Text(text = R.string.resources.string) },
+            MoeAppBar(
+                title = R.string.resources.string,
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.popBackStackIfLifecycleIsResumed(lifecycleOwner)
                     }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = R.string.back.string)
                     }
-                },
+                }
             )
         },
     ) { innerPadding ->
@@ -77,23 +83,62 @@ fun ResourceListPage(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            SingleChoiceSegmentedButtonRow(
+            MoeCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .padding(horizontal = MoeSpacing.xl, vertical = MoeSpacing.md),
+                contentPadding = PaddingValues(MoeSpacing.lg),
+                containerColor = colors.bgSurface,
             ) {
-                SegmentedButton(
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                    selected = selectedFilter == ResourceFilter.IMAGE,
-                    onClick = { selectedFilter = ResourceFilter.IMAGE },
-                    label = { Text(R.string.image.string) }
+                Text(
+                    text = R.string.resources.string,
+                    style = MoeTypography.title,
+                    color = colors.textPrimary,
                 )
-                SegmentedButton(
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                    selected = selectedFilter == ResourceFilter.OTHER,
-                    onClick = { selectedFilter = ResourceFilter.OTHER },
-                    label = { Text(R.string.other.string) }
+                Text(
+                    text = if (selectedFilter == ResourceFilter.IMAGE) {
+                        imageResources.size.toString()
+                    } else {
+                        otherResources.size.toString()
+                    },
+                    style = MoeTypography.display,
+                    color = colors.accentPrimary,
+                    modifier = Modifier.padding(top = MoeSpacing.xs),
                 )
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = MoeSpacing.lg)
+                ) {
+                    SegmentedButton(
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                        selected = selectedFilter == ResourceFilter.IMAGE,
+                        onClick = { selectedFilter = ResourceFilter.IMAGE },
+                        colors = SegmentedButtonDefaults.colors(
+                            activeContainerColor = colors.accentSoft,
+                            activeContentColor = colors.accentPrimary,
+                            inactiveContainerColor = colors.bgElevated,
+                            inactiveContentColor = colors.textSecondary,
+                            activeBorderColor = colors.strokeSubtle,
+                            inactiveBorderColor = colors.strokeSubtle,
+                        ),
+                        label = { Text(R.string.image.string) }
+                    )
+                    SegmentedButton(
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                        selected = selectedFilter == ResourceFilter.OTHER,
+                        onClick = { selectedFilter = ResourceFilter.OTHER },
+                        colors = SegmentedButtonDefaults.colors(
+                            activeContainerColor = colors.accentSoft,
+                            activeContentColor = colors.accentPrimary,
+                            inactiveContainerColor = colors.bgElevated,
+                            inactiveContentColor = colors.textSecondary,
+                            activeBorderColor = colors.strokeSubtle,
+                            inactiveBorderColor = colors.strokeSubtle,
+                        ),
+                        label = { Text(R.string.other.string) }
+                    )
+                }
             }
 
             if (selectedFilter == ResourceFilter.IMAGE) {
@@ -101,10 +146,10 @@ fun ResourceListPage(
                     columns = StaggeredGridCells.Fixed(2),
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalItemSpacing = 10.dp,
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                        .padding(horizontal = MoeSpacing.xl),
+                    horizontalArrangement = Arrangement.spacedBy(MoeSpacing.md),
+                    verticalItemSpacing = MoeSpacing.md,
+                    contentPadding = PaddingValues(bottom = MoeSpacing.xl)
                 ) {
                     staggeredGridItems(imageResources, key = { it.identifier }) { resource ->
                         MemoImage(
@@ -120,9 +165,9 @@ fun ResourceListPage(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                        .padding(horizontal = MoeSpacing.xl),
+                    verticalArrangement = Arrangement.spacedBy(MoeSpacing.sm),
+                    contentPadding = PaddingValues(bottom = MoeSpacing.xl)
                 ) {
                     lazyItems(otherResources, key = { it.identifier }) { resource ->
                         Attachment(resource = resource)

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -54,12 +55,32 @@ fun Navigation() {
                 navController = navController,
                 startDestination = RouteName.MEMOS,
                 enterTransition = {
-                    slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up,
-                        initialOffset = { it / 4 }) + fadeIn()
+                    slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Left,
+                        animationSpec = tween(240),
+                        initialOffset = { it / 6 }
+                    ) + fadeIn(animationSpec = tween(180))
                 },
                 exitTransition = {
-                    slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down,
-                        targetOffset = { it / 4 }) + fadeOut()
+                    slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Left,
+                        animationSpec = tween(220),
+                        targetOffset = { it / 10 }
+                    ) + fadeOut(animationSpec = tween(160))
+                },
+                popEnterTransition = {
+                    slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Right,
+                        animationSpec = tween(220),
+                        initialOffset = { it / 10 }
+                    ) + fadeIn(animationSpec = tween(160))
+                },
+                popExitTransition = {
+                    slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Right,
+                        animationSpec = tween(200),
+                        targetOffset = { it / 8 }
+                    ) + fadeOut(animationSpec = tween(140))
                 },
             ) {
                 composable(RouteName.MEMOS) {

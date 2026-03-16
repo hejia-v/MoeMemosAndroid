@@ -4,8 +4,13 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.text.format.DateUtils
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,7 +31,6 @@ import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -36,6 +40,7 @@ import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +49,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -57,6 +63,10 @@ import me.mudkip.moememos.ext.icon
 import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ext.titleResource
 import me.mudkip.moememos.ui.designsystem.component.MoeCard
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeMotion
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.ui.page.common.LocalRootNavController
 import me.mudkip.moememos.ui.page.common.RouteName
 import me.mudkip.moememos.viewmodel.LocalMemos
@@ -74,11 +84,52 @@ fun MemosCard(
     val memosViewModel = LocalMemos.current
     val rootNavController = LocalRootNavController.current
     val scope = rememberCoroutineScope()
+    val colors = MoeDesignTokens.colors
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    var entered by remember(memo.identifier) { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.988f else 1f,
+        animationSpec = tween(
+            durationMillis = if (pressed) {
+                MoeMotion.fast.inWholeMilliseconds.toInt()
+            } else {
+                MoeMotion.normal.inWholeMilliseconds.toInt()
+            }
+        ),
+        label = "memo_card_scale"
+    )
+    val entryAlpha by animateFloatAsState(
+        targetValue = if (entered) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = MoeMotion.normal.inWholeMilliseconds.toInt()
+        ),
+        label = "memo_card_alpha"
+    )
+    val entryOffset by animateDpAsState(
+        targetValue = if (entered) 0.dp else 10.dp,
+        animationSpec = tween(
+            durationMillis = MoeMotion.normal.inWholeMilliseconds.toInt()
+        ),
+        label = "memo_card_offset"
+    )
+
+    LaunchedEffect(memo.identifier) {
+        entered = true
+    }
 
     val cardModifier = Modifier
-        .padding(horizontal = 15.dp, vertical = 10.dp)
+        .graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+            alpha = entryAlpha
+            translationY = entryOffset.toPx()
+        }
+        .padding(horizontal = MoeSpacing.xl, vertical = MoeSpacing.sm)
         .fillMaxWidth()
         .combinedClickable(
+            interactionSource = interactionSource,
+            indication = null,
             onClick = {
                 if (editGesture == MemoEditGesture.SINGLE) {
                     rootNavController.navigate("${RouteName.EDIT}?memoId=${memo.identifier}")
@@ -108,12 +159,17 @@ fun MemosCard(
             BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
         } else {
             null
-        }
+        },
+        containerColor = colors.bgElevated
     ) {
         Column {
             Row(
                 modifier = Modifier
-                    .padding(start = 15.dp)
+                    .padding(
+                        start = MoeSpacing.lg,
+                        end = MoeSpacing.sm,
+                        top = MoeSpacing.md,
+                    )
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -123,8 +179,8 @@ fun MemosCard(
                         System.currentTimeMillis(),
                         DateUtils.SECOND_IN_MILLIS
                     ).toString(),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.outline
+                    style = MoeTypography.caption,
+                    color = colors.textTertiary
                 )
                 if (showSyncStatus && memo.needsSync) {
                     Icon(
@@ -133,7 +189,7 @@ fun MemosCard(
                         modifier = Modifier
                             .padding(start = 5.dp)
                             .size(20.dp),
-                        tint = MaterialTheme.colorScheme.error
+                        tint = colors.accentDanger
                     )
                 }
                 if (LocalUserState.current.currentUser?.defaultVisibility != memo.visibility) {
@@ -143,7 +199,7 @@ fun MemosCard(
                         modifier = Modifier
                             .padding(start = 5.dp)
                             .size(20.dp),
-                        tint = MaterialTheme.colorScheme.outline
+                        tint = colors.textTertiary
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
@@ -192,15 +248,21 @@ fun MemosCardActionButton(
     val scope = rememberCoroutineScope()
     var showDeleteDialog by remember { mutableStateOf(false) }
     val memoLabel = stringResource(R.string.memo)
+    val colors = MoeDesignTokens.colors
 
     Box {
         IconButton(onClick = { menuExpanded = true }) {
             Icon(Icons.Filled.MoreVert, contentDescription = null)
         }
-        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+        DropdownMenu(
+            expanded = menuExpanded,
+            onDismissRequest = { menuExpanded = false },
+            shape = me.mudkip.moememos.ui.designsystem.token.MoeRadius.shapeLg,
+            containerColor = colors.bgSurface,
+        ) {
             if (memo.pinned) {
                 DropdownMenuItem(
-                    text = { Text(R.string.unpin.string) },
+                    text = { Text(R.string.unpin.string, color = colors.textPrimary) },
                     onClick = {
                         scope.launch {
                             memosViewModel.updateMemoPinned(memo.identifier, false).suspendOnSuccess {
@@ -211,12 +273,17 @@ fun MemosCardActionButton(
                     leadingIcon = {
                         Icon(
                             Icons.Outlined.PinDrop,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = colors.textSecondary,
                         )
-                    })
+                    },
+                    colors = MenuDefaults.itemColors(
+                        textColor = colors.textPrimary,
+                        leadingIconColor = colors.textSecondary,
+                    ))
             } else {
                 DropdownMenuItem(
-                    text = { Text(R.string.pin.string) },
+                    text = { Text(R.string.pin.string, color = colors.textPrimary) },
                     onClick = {
                         scope.launch {
                             memosViewModel.updateMemoPinned(memo.identifier, true).suspendOnSuccess {
@@ -227,23 +294,33 @@ fun MemosCardActionButton(
                     leadingIcon = {
                         Icon(
                             Icons.Outlined.PushPin,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = colors.textSecondary,
                         )
-                    })
+                    },
+                    colors = MenuDefaults.itemColors(
+                        textColor = colors.textPrimary,
+                        leadingIconColor = colors.textSecondary,
+                    ))
             }
             DropdownMenuItem(
-                text = { Text(R.string.edit.string) },
+                text = { Text(R.string.edit.string, color = colors.textPrimary) },
                 onClick = {
                     rootNavController.navigate("${RouteName.EDIT}?memoId=${memo.identifier}")
                 },
                 leadingIcon = {
                     Icon(
                         Icons.Outlined.Edit,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = colors.textSecondary,
                     )
-                })
+                },
+                colors = MenuDefaults.itemColors(
+                    textColor = colors.textPrimary,
+                    leadingIconColor = colors.textSecondary,
+                ))
             DropdownMenuItem(
-                text = { Text(R.string.share.string) },
+                text = { Text(R.string.share.string, color = colors.textPrimary) },
                 onClick = {
                     val sendIntent = Intent().apply {
                         action = Intent.ACTION_SEND
@@ -256,11 +333,16 @@ fun MemosCardActionButton(
                 leadingIcon = {
                     Icon(
                         Icons.Outlined.Share,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = colors.textSecondary,
                     )
-                })
+                },
+                colors = MenuDefaults.itemColors(
+                    textColor = colors.textPrimary,
+                    leadingIconColor = colors.textSecondary,
+                ))
             DropdownMenuItem(
-                text = { Text(R.string.copy.string) },
+                text = { Text(R.string.copy.string, color = colors.textPrimary) },
                 onClick = {
                     clipboardManager?.setPrimaryClip(
                         ClipData.newPlainText(memoLabel, memo.content)
@@ -270,12 +352,17 @@ fun MemosCardActionButton(
                 leadingIcon = {
                     Icon(
                         Icons.Outlined.ContentCopy,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = colors.textSecondary,
                     )
-                })
+                },
+                colors = MenuDefaults.itemColors(
+                    textColor = colors.textPrimary,
+                    leadingIconColor = colors.textSecondary,
+                ))
             if (currentAccount !is Account.Local) {
                 DropdownMenuItem(
-                    text = { Text(R.string.copy_link.string) },
+                    text = { Text(R.string.copy_link.string, color = colors.textPrimary) },
                     onClick = {
                         memosViewModel.host.value?.let { host ->
                             val memoUrl = "$host/${memo.remoteId ?: memo.identifier}"
@@ -291,12 +378,17 @@ fun MemosCardActionButton(
                     leadingIcon = {
                         Icon(
                             Icons.Outlined.Link,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = colors.textSecondary,
                         )
-                    })
+                    },
+                    colors = MenuDefaults.itemColors(
+                        textColor = colors.textPrimary,
+                        leadingIconColor = colors.textSecondary,
+                    ))
             }
             DropdownMenuItem(
-                text = { Text(R.string.archive.string) },
+                text = { Text(R.string.archive.string, color = colors.textSecondary) },
                 onClick = {
                     scope.launch {
                         memosViewModel.archiveMemo(memo.identifier).suspendOnSuccess {
@@ -305,29 +397,31 @@ fun MemosCardActionButton(
                     }
                 },
                 colors = MenuDefaults.itemColors(
-                    textColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    leadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textColor = colors.textSecondary,
+                    leadingIconColor = colors.textSecondary,
                 ),
                 leadingIcon = {
                     Icon(
                         Icons.Outlined.Archive,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = colors.textSecondary,
                     )
                 })
             DropdownMenuItem(
-                text = { Text(R.string.delete.string) },
+                text = { Text(R.string.delete.string, color = colors.accentDanger) },
                 onClick = {
                     showDeleteDialog = true
                     menuExpanded = false
                 },
                 colors = MenuDefaults.itemColors(
-                    textColor = MaterialTheme.colorScheme.error,
-                    leadingIconColor = MaterialTheme.colorScheme.error,
+                    textColor = colors.accentDanger,
+                    leadingIconColor = colors.accentDanger,
                 ),
                 leadingIcon = {
                     Icon(
                         Icons.Outlined.Delete,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = colors.accentDanger,
                     )
                 })
         }
@@ -336,7 +430,13 @@ fun MemosCardActionButton(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text(R.string.delete_this_memo.string) },
+            title = {
+                Text(
+                    text = R.string.delete_this_memo.string,
+                    style = MoeTypography.title,
+                    color = colors.textPrimary,
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -347,8 +447,8 @@ fun MemosCardActionButton(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
-                        containerColor = MaterialTheme.colorScheme.errorContainer
+                        contentColor = colors.textOnAccent,
+                        containerColor = colors.accentDanger
                     )
                 ) {
                     Text(R.string.confirm.string)
@@ -358,7 +458,10 @@ fun MemosCardActionButton(
                 TextButton(
                     onClick = {
                         showDeleteDialog = false
-                    }
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = colors.textSecondary,
+                    )
                 ) {
                     Text(R.string.cancel.string)
                 }

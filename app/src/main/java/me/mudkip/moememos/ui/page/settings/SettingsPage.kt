@@ -1,8 +1,10 @@
 package me.mudkip.moememos.ui.page.settings
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.BugReport
@@ -17,8 +19,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.Dispatchers
@@ -47,6 +46,11 @@ import me.mudkip.moememos.ext.popBackStackIfLifecycleIsResumed
 import me.mudkip.moememos.ext.settingsDataStore
 import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ui.component.MemosIcon
+import me.mudkip.moememos.ui.designsystem.component.MoeAppBar
+import me.mudkip.moememos.ui.designsystem.component.MoeCard
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.ui.page.common.RouteName
 import me.mudkip.moememos.viewmodel.LocalUserState
 
@@ -55,7 +59,6 @@ import me.mudkip.moememos.viewmodel.LocalUserState
 fun SettingsPage(
     navController: NavHostController
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val userStateViewModel = LocalUserState.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
@@ -64,80 +67,112 @@ fun SettingsPage(
     val accounts by userStateViewModel.accounts.collectAsState()
     val currentAccount by userStateViewModel.currentAccount.collectAsState()
     val settings by context.settingsDataStore.data.collectAsState(initial = Settings())
+    val colors = MoeDesignTokens.colors
     var showEditGestureDialog by remember { mutableStateOf(false) }
     val currentEditGesture = settings.usersList
         .firstOrNull { it.accountKey == settings.currentUser }
         ?.settings
         ?.editGesture
         ?: MemoEditGesture.NONE
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
-        modifier = Modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        containerColor = colors.bgApp,
         topBar = {
-            LargeTopAppBar(
-                title = { Text(text = R.string.settings.string) },
+            MoeAppBar(
+                title = R.string.settings.string,
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.popBackStackIfLifecycleIsResumed(lifecycleOwner)
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = R.string.back.string)
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = R.string.back.string
+                        )
                     }
-                },
-                scrollBehavior = scrollBehavior
+                }
             )
         }
     ) { innerPadding ->
-        LazyColumn(contentPadding = innerPadding) {
+        LazyColumn(
+            contentPadding = PaddingValues(
+                start = MoeSpacing.xl,
+                top = innerPadding.calculateTopPadding() + MoeSpacing.sm,
+                end = MoeSpacing.xl,
+                bottom = innerPadding.calculateBottomPadding() + MoeSpacing.xxxl,
+            )
+        ) {
             item {
-                Text(
-                    R.string.accounts.string,
+                MoeCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp, 10.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.outline
-                )
+                        .padding(bottom = MoeSpacing.md),
+                    contentPadding = PaddingValues(
+                        horizontal = MoeSpacing.xl,
+                        vertical = MoeSpacing.lg,
+                    ),
+                    containerColor = colors.bgSurface,
+                ) {
+                    Text(
+                        text = currentAccount?.toUser()?.name ?: R.string.local_account.string,
+                        style = MoeTypography.title,
+                        color = colors.textPrimary,
+                    )
+                    Text(
+                        text = R.string.settings.string,
+                        style = MoeTypography.body,
+                        color = colors.textSecondary,
+                        modifier = Modifier.padding(top = MoeSpacing.xs),
+                    )
+                }
             }
 
-            accounts.forEach { account ->
+            item {
+                SettingsSectionTitle(text = R.string.accounts.string)
+            }
+
+            items(accounts, key = { it.accountKey() }) { account ->
                 when (account) {
-                    is Account.MemosV0 -> item {
-                        SettingItem(icon = MemosIcon, text = account.info.name, trailingIcon = {
-                            if (currentAccount?.accountKey() == account.accountKey()) {
-                                Icon(Icons.Outlined.Check,
-                                    contentDescription = R.string.selected.string,
-                                    modifier = Modifier.padding(start = 16.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+                    is Account.MemosV0 -> {
+                        SettingItem(
+                            icon = MemosIcon,
+                            text = account.info.name,
+                            trailingIcon = {
+                                if (currentAccount?.accountKey() == account.accountKey()) {
+                                    SelectedIndicator()
+                                }
                             }
-                        }) {
+                        ) {
                             navController.navigate("${RouteName.ACCOUNT}?accountKey=${account.accountKey()}")
                         }
                     }
-                    is Account.MemosV1 -> item {
-                        SettingItem(icon = MemosIcon, text = account.info.name, trailingIcon = {
-                            if (currentAccount?.accountKey() == account.accountKey()) {
-                                Icon(Icons.Outlined.Check,
-                                    contentDescription = R.string.selected.string,
-                                    modifier = Modifier.padding(start = 16.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+
+                    is Account.MemosV1 -> {
+                        SettingItem(
+                            icon = MemosIcon,
+                            text = account.info.name,
+                            trailingIcon = {
+                                if (currentAccount?.accountKey() == account.accountKey()) {
+                                    SelectedIndicator()
+                                }
                             }
-                        }) {
+                        ) {
                             navController.navigate("${RouteName.ACCOUNT}?accountKey=${account.accountKey()}")
                         }
                     }
-                    is Account.Local -> item {
-                        SettingItem(icon = Icons.Outlined.Home, text = R.string.local_account.string, trailingIcon = {
-                            if (currentAccount?.accountKey() == account.accountKey()) {
-                                Icon(Icons.Outlined.Check,
-                                    contentDescription = R.string.selected.string,
-                                    modifier = Modifier.padding(start = 16.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+
+                    is Account.Local -> {
+                        SettingItem(
+                            icon = Icons.Outlined.Home,
+                            text = R.string.local_account.string,
+                            trailingIcon = {
+                                if (currentAccount?.accountKey() == account.accountKey()) {
+                                    SelectedIndicator()
+                                }
                             }
-                        }) {
+                        ) {
                             navController.navigate("${RouteName.ACCOUNT}?accountKey=${account.accountKey()}")
                         }
                     }
@@ -151,14 +186,7 @@ fun SettingsPage(
             }
 
             item {
-                Text(
-                    R.string.preferences.string,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp, 10.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.outline
-                )
+                SettingsSectionTitle(text = R.string.preferences.string)
             }
 
             item {
@@ -168,7 +196,8 @@ fun SettingsPage(
                     trailingIcon = {
                         Text(
                             text = currentEditGesture.titleResource.string,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = colors.textSecondary,
+                            style = MoeTypography.label,
                         )
                     }
                 ) {
@@ -177,14 +206,7 @@ fun SettingsPage(
             }
 
             item {
-                Text(
-                    R.string.about.string,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp, 10.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.outline
-                )
+                SettingsSectionTitle(text = R.string.about.string)
             }
 
             item {
@@ -219,8 +241,7 @@ fun SettingsPage(
             title = { Text(R.string.edit_gesture.string) },
             text = {
                 LazyColumn {
-                    items(MemoEditGesture.entries.size) { index ->
-                        val gesture = MemoEditGesture.entries[index]
+                    items(MemoEditGesture.entries) { gesture ->
                         TextButton(
                             onClick = {
                                 showEditGestureDialog = false
@@ -246,9 +267,9 @@ fun SettingsPage(
                             Text(
                                 text = gesture.titleResource.string,
                                 color = if (gesture == currentEditGesture) {
-                                    MaterialTheme.colorScheme.primary
+                                    colors.accentPrimary
                                 } else {
-                                    MaterialTheme.colorScheme.onSurface
+                                    colors.textPrimary
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -263,6 +284,32 @@ fun SettingsPage(
             }
         )
     }
+}
+
+@Composable
+private fun SettingsSectionTitle(text: String) {
+    val colors = MoeDesignTokens.colors
+
+    Text(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = MoeSpacing.lg, bottom = MoeSpacing.xs),
+        style = MoeTypography.label,
+        color = colors.textSecondary
+    )
+}
+
+@Composable
+private fun SelectedIndicator() {
+    val colors = MoeDesignTokens.colors
+
+    Icon(
+        imageVector = Icons.Outlined.Check,
+        contentDescription = R.string.selected.string,
+        modifier = Modifier.padding(start = MoeSpacing.lg),
+        tint = colors.textSecondary,
+    )
 }
 
 private val MemoEditGesture.titleResource: Int

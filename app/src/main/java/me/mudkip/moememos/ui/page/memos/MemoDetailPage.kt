@@ -1,8 +1,10 @@
 package me.mudkip.moememos.ui.page.memos
 
 import android.text.format.DateUtils
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,10 +18,8 @@ import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,6 +44,12 @@ import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ext.titleResource
 import me.mudkip.moememos.ui.component.MemoContent
 import me.mudkip.moememos.ui.component.MemosCardActionButton
+import me.mudkip.moememos.ui.designsystem.component.MoeAppBar
+import me.mudkip.moememos.ui.designsystem.component.MoeCard
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeRadius
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.viewmodel.LocalMemos
 import me.mudkip.moememos.viewmodel.LocalUserState
 
@@ -58,6 +64,7 @@ fun MemoDetailPage(
     val userStateViewModel = LocalUserState.current
     val currentAccount by userStateViewModel.currentAccount.collectAsState()
     val scope = rememberCoroutineScope()
+    val colors = MoeDesignTokens.colors
     val memo = remember(memosViewModel.memos.toList(), memoIdentifier) {
         memosViewModel.memos.firstOrNull { it.identifier == memoIdentifier }
     }
@@ -71,9 +78,10 @@ fun MemoDetailPage(
     }
 
     Scaffold(
+        containerColor = colors.bgApp,
         topBar = {
-            TopAppBar(
-                title = { Text(text = R.string.memo.string) },
+            MoeAppBar(
+                title = R.string.memo.string,
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStackIfLifecycleIsResumed(lifecycleOwner) }) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = R.string.back.string)
@@ -101,63 +109,97 @@ fun MemoDetailPage(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
+                .padding(horizontal = MoeSpacing.xl, vertical = MoeSpacing.md)
                 .verticalScroll(rememberScrollState())
         ) {
-            Row(
-                modifier = Modifier
-                    .padding(start = 15.dp, top = 10.dp, end = 15.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+            MoeCard(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(MoeSpacing.xl),
+                containerColor = colors.bgSurface,
             ) {
-                Text(
-                    DateUtils.getRelativeTimeSpanString(
-                        memo.date.toEpochMilli(),
-                        System.currentTimeMillis(),
-                        DateUtils.SECOND_IN_MILLIS
-                    ).toString(),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.outline
-                )
-                if (currentAccount !is Account.Local && memo.needsSync) {
-                    Icon(
-                        imageVector = Icons.Outlined.CloudOff,
-                        contentDescription = R.string.memo_sync_pending.string,
-                        modifier = Modifier
-                            .padding(start = 5.dp)
-                            .size(20.dp),
+                Column {
+                    Text(
+                        text = DateUtils.getRelativeTimeSpanString(
+                            memo.date.toEpochMilli(),
+                            System.currentTimeMillis(),
+                            DateUtils.SECOND_IN_MILLIS
+                        ).toString(),
+                        style = MoeTypography.caption,
+                        color = colors.textTertiary,
                     )
-                }
-                if (userStateViewModel.currentUser?.defaultVisibility != memo.visibility) {
-                    Icon(
-                        imageVector = memo.visibility.icon,
-                        contentDescription = stringResource(memo.visibility.titleResource),
+                    Row(
                         modifier = Modifier
-                            .padding(start = 5.dp)
-                            .size(20.dp)
-                    )
+                            .padding(top = MoeSpacing.md)
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = R.string.memo.string,
+                            style = MoeTypography.headline,
+                            color = colors.textPrimary,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = stringResource(memo.visibility.titleResource),
+                            style = MoeTypography.label,
+                            color = colors.accentPrimary,
+                            modifier = Modifier
+                                .background(
+                                    color = colors.accentSoft,
+                                    shape = MoeRadius.shapeFull,
+                                )
+                                .padding(horizontal = MoeSpacing.md, vertical = MoeSpacing.xs),
+                        )
+                    }
+                    if (currentAccount !is Account.Local && memo.needsSync) {
+                        Row(
+                            modifier = Modifier.padding(top = MoeSpacing.md),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.CloudOff,
+                                contentDescription = R.string.memo_sync_pending.string,
+                                modifier = Modifier.size(18.dp),
+                                tint = colors.accentDanger,
+                            )
+                            Text(
+                                text = R.string.memo_sync_pending.string,
+                                style = MoeTypography.caption,
+                                color = colors.textSecondary,
+                                modifier = Modifier.padding(start = MoeSpacing.sm),
+                            )
+                        }
+                    }
                 }
             }
 
-            MemoContent(
-                memo = memo,
-                selectable = true,
-                checkboxChange = { checked, startOffset, endOffset ->
-                    scope.launch {
-                        var text = memo.content.substring(startOffset, endOffset)
-                        text = if (checked) {
-                            text.replace("[ ]", "[x]")
-                        } else {
-                            text.replace("[x]", "[ ]")
+            MoeCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MoeSpacing.md, bottom = MoeSpacing.xxl),
+                containerColor = colors.bgElevated,
+            ) {
+                MemoContent(
+                    memo = memo,
+                    selectable = true,
+                    checkboxChange = { checked, startOffset, endOffset ->
+                        scope.launch {
+                            var text = memo.content.substring(startOffset, endOffset)
+                            text = if (checked) {
+                                text.replace("[ ]", "[x]")
+                            } else {
+                                text.replace("[x]", "[ ]")
+                            }
+                            memosViewModel.editMemo(
+                                memo.identifier,
+                                memo.content.replaceRange(startOffset, endOffset, text),
+                                memo.resources,
+                                memo.visibility
+                            )
                         }
-                        memosViewModel.editMemo(
-                            memo.identifier,
-                            memo.content.replaceRange(startOffset, endOffset, text),
-                            memo.resources,
-                            memo.visibility
-                        )
                     }
-                }
-            )
+                )
+            }
         }
     }
 }

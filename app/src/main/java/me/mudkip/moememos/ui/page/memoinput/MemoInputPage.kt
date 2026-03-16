@@ -216,6 +216,8 @@ fun MemoInputPage(
                 }
                 text = updated
             },
+            isEditMode = memo != null,
+            currentVisibility = currentVisibility,
             focusRequester = focusRequester,
             validMimeTypePrefixes = validMimeTypePrefixes,
             onDroppedText = { droppedText ->

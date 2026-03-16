@@ -1,6 +1,7 @@
 package me.mudkip.moememos.ui.component
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,10 @@ import me.mudkip.moememos.R
 import me.mudkip.moememos.data.local.entity.ResourceEntity
 import me.mudkip.moememos.data.model.MemoRepresentable
 import me.mudkip.moememos.ext.string
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeRadius
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.viewmodel.LocalUserState
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
@@ -44,6 +49,7 @@ fun MemoContent(
     onTagClick: ((String) -> Unit)? = null
 ) {
     val rootNavController = LocalRootNavController.current
+    val colors = MoeDesignTokens.colors
     val (text, previewed) = remember(memo.content, previewMode) {
         if (previewMode) {
             extractPreviewContent(markdownText = memo.content)
@@ -61,7 +67,11 @@ fun MemoContent(
     }
 
     Column(
-        modifier = Modifier.padding(start = 15.dp, end = 15.dp, bottom = 10.dp)
+        modifier = Modifier.padding(
+            start = MoeSpacing.lg,
+            end = MoeSpacing.lg,
+            bottom = MoeSpacing.md
+        )
     ) {
         Markdown(
             text,
@@ -77,9 +87,13 @@ fun MemoContent(
             Row {
                 Text(
                     text = R.string.view_more.string,
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyMedium.copy(textDecoration = TextDecoration.Underline),
-                    modifier = Modifier.clickable(onClick = onViewMore)
+                    color = colors.accentPrimary,
+                    style = MoeTypography.label.copy(textDecoration = TextDecoration.Underline),
+                    modifier = Modifier
+                        .clip(MoeRadius.shapeFull)
+                        .background(colors.accentSoft)
+                        .clickable(onClick = onViewMore)
+                        .padding(horizontal = MoeSpacing.md, vertical = MoeSpacing.xs)
                 )
             }
         }

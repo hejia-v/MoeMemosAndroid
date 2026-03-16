@@ -1,5 +1,6 @@
 package me.mudkip.moememos.ui.designsystem.component
 
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -22,6 +23,7 @@ fun MoeInputField(
     minLines: Int = 1,
     maxLines: Int = Int.MAX_VALUE,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     val colors = MoeDesignTokens.colors
@@ -33,6 +35,7 @@ fun MoeInputField(
         minLines = minLines,
         maxLines = maxLines,
         keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
         visualTransformation = visualTransformation,
         shape = MoeRadius.shapeLg,
         textStyle = MoeTypography.body.copy(color = colors.textPrimary),
@@ -82,6 +85,7 @@ fun MoeInputField(
     minLines: Int = 1,
     maxLines: Int = Int.MAX_VALUE,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     val colors = MoeDesignTokens.colors
@@ -93,6 +97,7 @@ fun MoeInputField(
         minLines = minLines,
         maxLines = maxLines,
         keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
         visualTransformation = visualTransformation,
         shape = MoeRadius.shapeLg,
         textStyle = MoeTypography.body.copy(color = colors.textPrimary),

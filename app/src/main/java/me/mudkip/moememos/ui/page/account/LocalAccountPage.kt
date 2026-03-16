@@ -5,22 +5,25 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material3.Card
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import me.mudkip.moememos.R
 import me.mudkip.moememos.ext.string
+import me.mudkip.moememos.ui.designsystem.component.MoeCard
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeRadius
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 
 @Composable
 fun LocalAccountPage(
@@ -29,38 +32,51 @@ fun LocalAccountPage(
     onSwitchAccount: () -> Unit,
     onExportLocalAccount: () -> Unit
 ) {
-    LazyColumn(contentPadding = innerPadding) {
+    val colors = MoeDesignTokens.colors
+
+    LazyColumn(
+        contentPadding = PaddingValues(
+            start = MoeSpacing.xl,
+            top = innerPadding.calculateTopPadding() + MoeSpacing.sm,
+            end = MoeSpacing.xl,
+            bottom = innerPadding.calculateBottomPadding() + MoeSpacing.xxxl,
+        )
+    ) {
         item {
-            Card(
+            MoeCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(15.dp)
+                    .padding(bottom = MoeSpacing.md),
+                contentPadding = PaddingValues(MoeSpacing.xl),
+                containerColor = colors.bgSurface,
             ) {
-                Column(Modifier.padding(15.dp)) {
+                Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Outlined.Home,
                             contentDescription = null,
                             modifier = Modifier
-                                .padding(end = 8.dp)
-                                .clip(CircleShape),
+                                .size(MoeSpacing.xxxl)
+                                .padding(end = MoeSpacing.sm),
+                            tint = colors.accentPrimary,
                         )
                         Text(
                             R.string.local_account.string,
-                            style = MaterialTheme.typography.headlineSmall
+                            style = MoeTypography.headline,
+                            color = colors.textPrimary,
                         )
                     }
                     Text(
                         R.string.local_account_description.string,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.padding(top = 6.dp)
+                        style = MoeTypography.body,
+                        color = colors.textSecondary,
+                        modifier = Modifier.padding(top = MoeSpacing.sm)
                     )
                     Text(
                         R.string.local_account_non_removable.string,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.padding(top = 10.dp)
+                        style = MoeTypography.caption,
+                        color = colors.textTertiary,
+                        modifier = Modifier.padding(top = MoeSpacing.lg)
                     )
                 }
             }
@@ -70,10 +86,14 @@ fun LocalAccountPage(
             item {
                 FilledTonalButton(
                     onClick = onSwitchAccount,
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = colors.accentSoft,
+                        contentColor = colors.accentPrimary,
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 10.dp),
-                    contentPadding = PaddingValues(10.dp)
+                        .padding(bottom = MoeSpacing.sm),
+                    contentPadding = PaddingValues(MoeSpacing.md)
                 ) {
                     Text(R.string.switch_account.string)
                 }
@@ -81,12 +101,17 @@ fun LocalAccountPage(
         }
 
         item {
-            FilledTonalButton(
+            Button(
                 onClick = onExportLocalAccount,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colors.accentPrimary,
+                    contentColor = colors.textOnAccent,
+                ),
+                shape = MoeRadius.shapeLg,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 20.dp),
-                contentPadding = PaddingValues(10.dp)
+                    .padding(top = MoeSpacing.sm),
+                contentPadding = PaddingValues(MoeSpacing.md)
             ) {
                 Text(R.string.export_local_account.string)
             }

@@ -1,12 +1,20 @@
 package me.mudkip.moememos.ui.page.memoinput
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import android.content.ClipData
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.draganddrop.dragAndDropTarget
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -35,14 +43,19 @@ import androidx.compose.material.icons.outlined.Tag
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.DragAndDropEvent
@@ -68,8 +81,12 @@ import me.mudkip.moememos.ext.titleResource
 import me.mudkip.moememos.ui.component.Attachment
 import me.mudkip.moememos.ui.component.InputImage
 import me.mudkip.moememos.ui.designsystem.component.MoeAppBar
+import me.mudkip.moememos.ui.designsystem.component.MoeCard
 import me.mudkip.moememos.ui.designsystem.component.MoeInputField
 import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeRadius
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.viewmodel.MemoInputViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,6 +97,8 @@ internal fun MemoInputTopBar(
     onClose: () -> Unit,
     onSubmit: () -> Unit
 ) {
+    val colors = MoeDesignTokens.colors
+
     MoeAppBar(
         title = if (isEditMode) {
             stringResource(R.string.edit)
@@ -94,7 +113,16 @@ internal fun MemoInputTopBar(
         actions = {
             IconButton(
                 enabled = canSubmit,
-                onClick = onSubmit
+                onClick = onSubmit,
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = colors.textOnAccent,
+                    disabledContentColor = colors.textTertiary,
+                ),
+                modifier = Modifier
+                    .background(
+                        color = if (canSubmit) colors.accentPrimary else colors.bgPressed,
+                        shape = MoeRadius.shapeFull,
+                    )
             ) {
                 Icon(Icons.AutoMirrored.Filled.Send, contentDescription = stringResource(R.string.post))
             }
@@ -106,8 +134,15 @@ internal fun MemoInputTopBar(
 private fun FormattingButtons(
     onFormat: (MarkdownFormat) -> Unit,
 ) {
+    val colors = MoeDesignTokens.colors
+
     MarkdownFormat.entries.forEach { format ->
-        IconButton(onClick = { onFormat(format) }) {
+        IconButton(
+            onClick = { onFormat(format) },
+            colors = IconButtonDefaults.iconButtonColors(
+                contentColor = colors.textSecondary,
+            )
+        ) {
             when (format) {
                 MarkdownFormat.BOLD -> Icon(Icons.Outlined.FormatBold, contentDescription = format.label)
                 MarkdownFormat.ITALIC -> Icon(Icons.Outlined.FormatItalic, contentDescription = format.label)
@@ -117,7 +152,8 @@ private fun FormattingButtons(
                 MarkdownFormat.H1, MarkdownFormat.H2, MarkdownFormat.H3 -> Text(
                     text = format.label,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    color = colors.textSecondary,
                 )
             }
         }
@@ -147,10 +183,13 @@ internal fun MemoInputBottomBar(
 
     BottomAppBar(
         containerColor = colors.bgOverlay,
-        contentColor = colors.textPrimary
+        contentColor = colors.textPrimary,
+        tonalElevation = 0.dp,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = MoeSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
@@ -162,15 +201,27 @@ internal fun MemoInputBottomBar(
                         DropdownMenu(
                             expanded = visibilityMenuExpanded,
                             onDismissRequest = { onVisibilityExpandedChange(false) },
+                            shape = MoeRadius.shapeLg,
+                            containerColor = colors.bgSurface,
                             properties = PopupProperties(focusable = false)
                         ) {
                             enumValues<MemoVisibility>().forEach { visibility ->
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(visibility.titleResource)) },
+                                    text = {
+                                        Text(
+                                            text = stringResource(visibility.titleResource),
+                                            style = MoeTypography.body,
+                                        )
+                                    },
                                     onClick = {
                                         onVisibilitySelected(visibility)
                                         onVisibilityExpandedChange(false)
                                     },
+                                    colors = MenuDefaults.itemColors(
+                                        textColor = colors.textPrimary,
+                                        leadingIconColor = colors.textSecondary,
+                                        trailingIconColor = colors.accentPrimary,
+                                    ),
                                     leadingIcon = {
                                         Icon(
                                             visibility.icon,
@@ -185,7 +236,12 @@ internal fun MemoInputBottomBar(
                                 )
                             }
                         }
-                        IconButton(onClick = { onVisibilityExpandedChange(!visibilityMenuExpanded) }) {
+                        IconButton(
+                            onClick = { onVisibilityExpandedChange(!visibilityMenuExpanded) },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                contentColor = colors.textPrimary,
+                            )
+                        ) {
                             Icon(
                                 currentVisibility.icon,
                                 contentDescription = stringResource(currentVisibility.titleResource)
@@ -203,40 +259,68 @@ internal fun MemoInputBottomBar(
                         DropdownMenu(
                             expanded = tagMenuExpanded,
                             onDismissRequest = { onTagExpandedChange(false) },
+                            shape = MoeRadius.shapeLg,
+                            containerColor = colors.bgSurface,
                             properties = PopupProperties(focusable = false)
                         ) {
                             tags.forEach { tag ->
                                 DropdownMenuItem(
-                                    text = { Text(tag) },
+                                    text = {
+                                        Text(
+                                            text = tag,
+                                            style = MoeTypography.body,
+                                        )
+                                    },
                                     onClick = {
                                         onTagSelected(tag)
                                         onTagExpandedChange(false)
                                     },
+                                    colors = MenuDefaults.itemColors(
+                                        textColor = colors.textPrimary,
+                                        leadingIconColor = colors.textSecondary,
+                                    ),
                                     leadingIcon = {
                                         Icon(Icons.Outlined.Tag, contentDescription = null)
                                     }
                                 )
                             }
                         }
-                        IconButton(onClick = { onTagExpandedChange(!tagMenuExpanded) }) {
+                        IconButton(
+                            onClick = { onTagExpandedChange(!tagMenuExpanded) },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                contentColor = colors.textPrimary,
+                            )
+                        ) {
                             Icon(Icons.Outlined.Tag, contentDescription = stringResource(R.string.tag))
                         }
                     }
                 }
 
-                IconButton(onClick = onToggleTodoItem) {
+                IconButton(
+                    onClick = onToggleTodoItem,
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = colors.textPrimary)
+                ) {
                     Icon(Icons.Outlined.CheckBox, contentDescription = stringResource(R.string.add_task))
                 }
 
-                IconButton(onClick = onPickImage) {
+                IconButton(
+                    onClick = onPickImage,
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = colors.textPrimary)
+                ) {
                     Icon(Icons.Outlined.Image, contentDescription = stringResource(R.string.add_image))
                 }
 
-                IconButton(onClick = onPickAttachment) {
+                IconButton(
+                    onClick = onPickAttachment,
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = colors.textPrimary)
+                ) {
                     Icon(Icons.Outlined.Attachment, contentDescription = stringResource(R.string.attachment))
                 }
 
-                IconButton(onClick = onTakePhoto) {
+                IconButton(
+                    onClick = onTakePhoto,
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = colors.textPrimary)
+                ) {
                     Icon(Icons.Outlined.PhotoCamera, contentDescription = stringResource(R.string.take_photo))
                 }
 
@@ -254,12 +338,15 @@ internal fun MemoInputEditor(
     modifier: Modifier = Modifier,
     text: TextFieldValue,
     onTextChange: (TextFieldValue) -> Unit,
+    isEditMode: Boolean,
+    currentVisibility: MemoVisibility,
     focusRequester: FocusRequester,
     validMimeTypePrefixes: Set<String>,
     onDroppedText: (String) -> Unit,
     uploadResources: List<ResourceEntity>,
     inputViewModel: MemoInputViewModel
 ) {
+    val colors = MoeDesignTokens.colors
     val imageResources = remember(uploadResources) {
         uploadResources.filter { it.mimeType?.startsWith("image/") == true }
     }
@@ -296,48 +383,153 @@ internal fun MemoInputEditor(
                 }
             )
     ) {
-        MoeInputField(
+        MoeCard(
             modifier = Modifier
+                .padding(
+                    start = MoeSpacing.xl,
+                    end = MoeSpacing.xl,
+                    top = MoeSpacing.md,
+                    bottom = MoeSpacing.md,
+                )
                 .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, bottom = 20.dp)
-                .weight(1f)
-                .focusRequester(focusRequester),
-            value = text,
-            onValueChange = onTextChange,
-            label = stringResource(R.string.any_thoughts),
-            maxLines = Int.MAX_VALUE,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
-        )
+                .weight(1f),
+            contentPadding = PaddingValues(MoeSpacing.xl),
+            containerColor = colors.bgSurface,
+        ) {
+            Column(modifier = Modifier.fillMaxHeight()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (isEditMode) {
+                                stringResource(R.string.memo_input_edit_label)
+                            } else {
+                                stringResource(R.string.memo_input_new_label)
+                            },
+                            style = MoeTypography.caption,
+                            color = colors.textTertiary,
+                        )
+                        Text(
+                            text = stringResource(R.string.any_thoughts),
+                            style = MoeTypography.headline,
+                            color = colors.textPrimary,
+                            modifier = Modifier.padding(top = MoeSpacing.xs),
+                        )
+                        Text(
+                            text = stringResource(R.string.memo_input_helper),
+                            style = MoeTypography.body,
+                            color = colors.textSecondary,
+                            modifier = Modifier.padding(top = MoeSpacing.sm),
+                        )
+                    }
+                    Text(
+                        text = stringResource(currentVisibility.titleResource),
+                        style = MoeTypography.label,
+                        color = colors.accentPrimary,
+                        modifier = Modifier
+                            .padding(start = MoeSpacing.md)
+                            .background(
+                                color = colors.accentSoft,
+                                shape = MoeRadius.shapeFull,
+                            )
+                            .padding(horizontal = MoeSpacing.md, vertical = MoeSpacing.xs),
+                    )
+                }
 
-        if (imageResources.isNotEmpty()) {
-            LazyRow(
+                MoeInputField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = MoeSpacing.xl)
+                        .weight(1f)
+                        .focusRequester(focusRequester),
+                    value = text,
+                    onValueChange = onTextChange,
+                    label = stringResource(R.string.any_thoughts),
+                    maxLines = Int.MAX_VALUE,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                )
+            }
+        }
+
+        AnimatedVisibility(
+            visible = imageResources.isNotEmpty(),
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut(),
+        ) {
+            InputResourceSection(
+                title = stringResource(R.string.memo_input_images),
                 modifier = Modifier
-                    .height(80.dp)
                     .padding(
-                        start = 15.dp,
-                        end = 15.dp,
-                        bottom = if (attachmentResources.isEmpty()) 15.dp else 8.dp
-                    ),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        start = MoeSpacing.xl,
+                        end = MoeSpacing.xl,
+                        bottom = if (attachmentResources.isEmpty()) MoeSpacing.xl else MoeSpacing.sm,
+                    )
             ) {
-                items(imageResources, key = { it.identifier }) { resource ->
-                    InputImage(resource = resource, inputViewModel = inputViewModel)
+                LazyRow(
+                    modifier = Modifier.height(84.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MoeSpacing.sm)
+                ) {
+                    items(imageResources, key = { it.identifier }) { resource ->
+                        InputImage(resource = resource, inputViewModel = inputViewModel)
+                    }
                 }
             }
         }
 
-        if (attachmentResources.isNotEmpty()) {
-            LazyRow(
+        AnimatedVisibility(
+            visible = attachmentResources.isNotEmpty(),
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut(),
+        ) {
+            InputResourceSection(
+                title = stringResource(R.string.memo_input_attachments),
                 modifier = Modifier
-                    .padding(start = 15.dp, end = 15.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(attachmentResources, key = { it.identifier }) { resource ->
-                    Attachment(
-                        resource = resource,
-                        onRemove = { inputViewModel.deleteResource(resource.identifier) }
+                    .padding(
+                        start = MoeSpacing.xl,
+                        end = MoeSpacing.xl,
+                        bottom = MoeSpacing.xl,
                     )
+            ) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(MoeSpacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(MoeSpacing.sm),
+                ) {
+                    attachmentResources.forEach { resource ->
+                        Attachment(
+                            resource = resource,
+                            onRemove = { inputViewModel.deleteResource(resource.identifier) }
+                        )
+                    }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InputResourceSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val colors = MoeDesignTokens.colors
+
+    MoeCard(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(MoeSpacing.lg),
+        containerColor = colors.bgSurface,
+    ) {
+        Column {
+            Text(
+                text = title,
+                style = MoeTypography.label,
+                color = colors.textPrimary,
+            )
+            Box(modifier = Modifier.padding(top = MoeSpacing.md)) {
+                content()
             }
         }
     }
@@ -349,18 +541,43 @@ internal fun SaveChangesDialog(
     onDiscard: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val colors = MoeDesignTokens.colors
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Save Changes?") },
-        text = { Text("Do you want to save changes before exiting?") },
+        title = {
+            Text(
+                text = stringResource(R.string.memo_input_save_changes_title),
+                style = MoeTypography.title,
+                color = colors.textPrimary,
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.memo_input_save_changes_message),
+                style = MoeTypography.body,
+                color = colors.textSecondary,
+            )
+        },
         confirmButton = {
-            Button(onClick = onSave) {
-                Text("Save")
+            Button(
+                onClick = onSave,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colors.accentPrimary,
+                    contentColor = colors.textOnAccent,
+                )
+            ) {
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
-            Button(onClick = onDiscard) {
-                Text("Discard")
+            TextButton(
+                onClick = onDiscard,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = colors.textSecondary,
+                )
+            ) {
+                Text(stringResource(R.string.discard))
             }
         }
     )
