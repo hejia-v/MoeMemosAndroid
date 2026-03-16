@@ -14,6 +14,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,6 +27,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import me.mudkip.moememos.MainActivity
+import me.mudkip.moememos.data.model.Settings
+import me.mudkip.moememos.ext.settingsDataStore
 import me.mudkip.moememos.data.model.ShareContent
 import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ui.page.account.AccountPage
@@ -46,10 +49,11 @@ fun Navigation() {
     val navController = rememberNavController()
     val userStateViewModel = LocalUserState.current
     val context = LocalContext.current
+    val settings by context.settingsDataStore.data.collectAsState(initial = Settings())
     var shareContent by remember { mutableStateOf<ShareContent?>(null) }
 
     CompositionLocalProvider(LocalRootNavController provides navController) {
-        MoeMemosTheme {
+        MoeMemosTheme(themeMode = settings.themeMode) {
             NavHost(
                 modifier = Modifier.background(MaterialTheme.colorScheme.surface),
                 navController = navController,

@@ -109,6 +109,10 @@
     <string name="save">Save</string>
     <string name="discard">Discard</string>
     <string name="preferences">Preferences</string>
+    <string name="dark_mode">Dark mode</string>
+    <string name="theme_mode_system">Follow system</string>
+    <string name="theme_mode_light">Light</string>
+    <string name="theme_mode_dark">Dark</string>
     <string name="edit_gesture">Edit gesture</string>
     <string name="edit_gesture_none">None</string>
     <string name="edit_gesture_single">Single tap</string>

@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Lock
@@ -40,6 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.mudkip.moememos.R
 import me.mudkip.moememos.data.model.Account
+import me.mudkip.moememos.data.model.AppThemeMode
 import me.mudkip.moememos.data.model.MemoEditGesture
 import me.mudkip.moememos.data.model.Settings
 import me.mudkip.moememos.ext.popBackStackIfLifecycleIsResumed
@@ -69,11 +71,13 @@ fun SettingsPage(
     val settings by context.settingsDataStore.data.collectAsState(initial = Settings())
     val colors = MoeDesignTokens.colors
     var showEditGestureDialog by remember { mutableStateOf(false) }
+    var showThemeModeDialog by remember { mutableStateOf(false) }
     val currentEditGesture = settings.usersList
         .firstOrNull { it.accountKey == settings.currentUser }
         ?.settings
         ?.editGesture
         ?: MemoEditGesture.NONE
+    val currentThemeMode = settings.themeMode
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
@@ -191,6 +195,22 @@ fun SettingsPage(
 
             item {
                 SettingItem(
+                    icon = Icons.Outlined.DarkMode,
+                    text = R.string.dark_mode.string,
+                    trailingIcon = {
+                        Text(
+                            text = currentThemeMode.titleResource.string,
+                            color = colors.textSecondary,
+                            style = MoeTypography.label,
+                        )
+                    }
+                ) {
+                    showThemeModeDialog = true
+                }
+            }
+
+            item {
+                SettingItem(
                     icon = Icons.Outlined.Edit,
                     text = R.string.edit_gesture.string,
                     trailingIcon = {
@@ -233,6 +253,45 @@ fun SettingsPage(
                 }
             }
         }
+    }
+
+    if (showThemeModeDialog) {
+        AlertDialog(
+            onDismissRequest = { showThemeModeDialog = false },
+            title = { Text(R.string.dark_mode.string) },
+            text = {
+                LazyColumn {
+                    items(AppThemeMode.entries) { mode ->
+                        TextButton(
+                            onClick = {
+                                showThemeModeDialog = false
+                                scope.launch(Dispatchers.IO) {
+                                    context.settingsDataStore.updateData { existingSettings ->
+                                        existingSettings.copy(themeMode = mode)
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = mode.titleResource.string,
+                                color = if (mode == currentThemeMode) {
+                                    colors.accentPrimary
+                                } else {
+                                    colors.textPrimary
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showThemeModeDialog = false }) {
+                    Text(R.string.close.string)
+                }
+            }
+        )
     }
 
     if (showEditGestureDialog) {
@@ -318,4 +377,11 @@ private val MemoEditGesture.titleResource: Int
         MemoEditGesture.SINGLE -> R.string.edit_gesture_single
         MemoEditGesture.DOUBLE -> R.string.edit_gesture_double
         MemoEditGesture.LONG -> R.string.edit_gesture_long
+    }
+
+private val AppThemeMode.titleResource: Int
+    get() = when (this) {
+        AppThemeMode.SYSTEM -> R.string.theme_mode_system
+        AppThemeMode.LIGHT -> R.string.theme_mode_light
+        AppThemeMode.DARK -> R.string.theme_mode_dark
     }
