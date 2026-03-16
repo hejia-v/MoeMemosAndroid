@@ -54,6 +54,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import com.skydoves.sandwich.suspendOnSuccess
 import kotlinx.coroutines.launch
+import me.mudkip.moememos.BuildConfig
 import me.mudkip.moememos.R
 import me.mudkip.moememos.ext.popBackStackIfLifecycleIsResumed
 import me.mudkip.moememos.ext.string
@@ -76,7 +77,7 @@ fun LoginPage(
     val snackbarState = remember { SnackbarHostState() }
 
     var host by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(userStateViewModel.host))
+        mutableStateOf(TextFieldValue(userStateViewModel.host.ifBlank { BuildConfig.DEFAULT_MEMOS_HOST }))
     }
 
     var accessToken by rememberSaveable(stateSaver = TextFieldValue.Saver) {

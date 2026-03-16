@@ -33,6 +33,7 @@ android {
         targetSdk = 36
         versionCode = 47
         versionName = "2.0.2"
+        buildConfigField "String", "DEFAULT_MEMOS_HOST", "\"http://101.43.117.208:5230/\""
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -66,6 +67,7 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
     packaging {
