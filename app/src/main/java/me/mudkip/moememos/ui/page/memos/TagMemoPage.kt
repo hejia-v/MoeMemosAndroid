@@ -7,8 +7,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -16,6 +14,8 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import me.mudkip.moememos.R
 import me.mudkip.moememos.ext.string
+import me.mudkip.moememos.ui.designsystem.component.MoeAppBar
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.ui.page.common.RouteName
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,25 +27,20 @@ fun TagMemoPage(
 ) {
     val scope = rememberCoroutineScope()
     val normalizedCurrentTag = remember(tag) { normalizeTag(tag) }
+    val colors = MoeDesignTokens.colors
 
     Scaffold(
+        containerColor = colors.bgApp,
         topBar = {
-            TopAppBar(
-                title = { Text(tag) },
+            MoeAppBar(
+                title = tag,
                 navigationIcon = {
                     if (drawerState != null) {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(Icons.Filled.Menu, contentDescription = R.string.menu.string)
                         }
                     }
-                },
-//                actions = {
-//                    IconButton(onClick = {
-//
-//                    }) {
-//                        Icon(Icons.Filled.Search, contentDescription = "Search")
-//                    }
-//                }
+                }
             )
         },
 

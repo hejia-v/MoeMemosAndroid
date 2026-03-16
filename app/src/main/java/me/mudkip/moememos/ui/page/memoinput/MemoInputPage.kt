@@ -11,7 +11,6 @@ import androidx.activity.result.contract.ActivityResultContracts.TakePicture
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -39,6 +38,7 @@ import me.mudkip.moememos.data.model.ShareContent
 import me.mudkip.moememos.ext.popBackStackIfLifecycleIsResumed
 import me.mudkip.moememos.ext.suspendOnErrorMessage
 import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.component.MoeSnackbarHost
 import me.mudkip.moememos.ui.page.common.LocalRootNavController
 import me.mudkip.moememos.util.extractCustomTags
 import me.mudkip.moememos.viewmodel.LocalMemos
@@ -194,7 +194,7 @@ fun MemoInputPage(
             )
         },
         snackbarHost = {
-            SnackbarHost(hostState = snackbarState)
+            MoeSnackbarHost(hostState = snackbarState)
         }
     ) { innerPadding ->
         MemoInputEditor(

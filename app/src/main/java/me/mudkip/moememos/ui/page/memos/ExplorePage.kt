@@ -7,13 +7,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import me.mudkip.moememos.R
 import me.mudkip.moememos.ext.string
+import me.mudkip.moememos.ui.designsystem.component.MoeAppBar
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,11 +21,13 @@ fun ExplorePage(
     drawerState: DrawerState? = null
 ) {
     val scope = rememberCoroutineScope()
+    val colors = MoeDesignTokens.colors
 
     Scaffold(
+        containerColor = colors.bgApp,
         topBar = {
-            TopAppBar(
-                title = { Text(text = R.string.explore.string) },
+            MoeAppBar(
+                title = R.string.explore.string,
                 navigationIcon = {
                     if (drawerState != null) {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {

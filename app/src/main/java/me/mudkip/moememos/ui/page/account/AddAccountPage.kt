@@ -9,13 +9,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -35,6 +32,11 @@ import me.mudkip.moememos.data.model.Account
 import me.mudkip.moememos.ext.popBackStackIfLifecycleIsResumed
 import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ui.component.MemosIcon
+import me.mudkip.moememos.ui.designsystem.component.MoeAppBar
+import me.mudkip.moememos.ui.designsystem.component.MoeCard
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.ui.page.common.RouteName
 import me.mudkip.moememos.viewmodel.LocalUserState
 
@@ -49,6 +51,7 @@ fun AddAccountPage(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val coroutineScope = rememberCoroutineScope()
     val hasLocalAccount = accounts.any { it is Account.Local }
+    val colors = MoeDesignTokens.colors
 
     fun toMemos() {
         navController.navigate(RouteName.MEMOS) {
@@ -61,13 +64,11 @@ fun AddAccountPage(
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        containerColor = colors.bgApp,
         topBar = {
-            LargeTopAppBar(
-                title = {
-                    Text(
-                        text = if (accounts.isEmpty()) R.string.moe_memos.string else R.string.add_account.string
-                    )
-                },
+            MoeAppBar(
+                title = if (accounts.isEmpty()) R.string.moe_memos.string else R.string.add_account.string,
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     if (accounts.isNotEmpty()) {
                         IconButton(onClick = {
@@ -79,21 +80,20 @@ fun AddAccountPage(
                             )
                         }
                     }
-                },
-                scrollBehavior = scrollBehavior
+                }
             )
         }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(vertical = 16.dp),
+                .padding(horizontal = MoeSpacing.xl),
+            verticalArrangement = Arrangement.spacedBy(MoeSpacing.md),
+            contentPadding = PaddingValues(vertical = MoeSpacing.md),
         ) {
             if (!hasLocalAccount) {
                 item {
-                    Card(
+                    MoeCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
@@ -101,37 +101,57 @@ fun AddAccountPage(
                                     userStateViewModel.addLocalAccount()
                                         .suspendOnSuccess { toMemos() }
                                 }
-                            }
+                            },
+                        contentPadding = PaddingValues(0.dp),
+                        containerColor = colors.bgSurface,
                     ) {
                         ListItem(
-                            headlineContent = { Text(R.string.add_local_account.string) },
-                            supportingContent = { Text(R.string.local_account_description.string) },
+                            headlineContent = {
+                                Text(R.string.add_local_account.string, style = MoeTypography.title)
+                            },
+                            supportingContent = {
+                                Text(
+                                    R.string.local_account_description.string,
+                                    style = MoeTypography.body,
+                                    color = colors.textSecondary
+                                )
+                            },
                             leadingContent = {
                                 Icon(
                                     imageVector = Icons.Outlined.Home,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
+                                    tint = colors.accentPrimary
                                 )
-                            }
+                            },
                         )
                     }
                 }
             }
 
             item {
-                Card(
+                MoeCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { navController.navigate(RouteName.LOGIN) }
+                        .clickable { navController.navigate(RouteName.LOGIN) },
+                    contentPadding = PaddingValues(0.dp),
+                    containerColor = colors.bgSurface,
                 ) {
                     ListItem(
-                        headlineContent = { Text(R.string.add_memos_account.string) },
-                        supportingContent = { Text(R.string.memos_account_description.string) },
+                        headlineContent = {
+                            Text(R.string.add_memos_account.string, style = MoeTypography.title)
+                        },
+                        supportingContent = {
+                            Text(
+                                R.string.memos_account_description.string,
+                                style = MoeTypography.body,
+                                color = colors.textSecondary
+                            )
+                        },
                         leadingContent = {
                             Icon(
                                 imageVector = MemosIcon,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = colors.accentPrimary
                             )
                         }
                     )

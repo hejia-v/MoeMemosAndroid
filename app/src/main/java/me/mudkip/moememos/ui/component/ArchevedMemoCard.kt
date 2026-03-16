@@ -15,12 +15,10 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -38,6 +36,11 @@ import kotlinx.coroutines.launch
 import me.mudkip.moememos.R
 import me.mudkip.moememos.data.local.entity.MemoEntity
 import me.mudkip.moememos.ext.string
+import me.mudkip.moememos.ui.designsystem.component.MoeCard
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeRadius
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.viewmodel.LocalArchivedMemos
 import me.mudkip.moememos.viewmodel.LocalMemos
 
@@ -45,20 +48,25 @@ import me.mudkip.moememos.viewmodel.LocalMemos
 fun ArchivedMemoCard(
     memo: MemoEntity
 ) {
-    Card(
+    val colors = MoeDesignTokens.colors
+
+    MoeCard(
         modifier = Modifier
-            .padding(horizontal = 15.dp, vertical = 10.dp)
-            .fillMaxWidth()
+            .padding(horizontal = MoeSpacing.xl, vertical = MoeSpacing.sm)
+            .fillMaxWidth(),
+        containerColor = colors.bgSurface,
     ) {
         Column {
             Row(
-                modifier = Modifier.padding(start = 15.dp).fillMaxWidth(),
+                modifier = Modifier
+                    .padding(start = MoeSpacing.lg)
+                    .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     DateUtils.getRelativeTimeSpanString(memo.date.toEpochMilli(), System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS).toString(),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.outline
+                    style = MoeTypography.caption,
+                    color = colors.textTertiary
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 ArchivedMemosCardActionButton(memo)
@@ -78,6 +86,7 @@ fun ArchivedMemosCardActionButton(
     val archivedMemoListViewModel = LocalArchivedMemos.current
     val memosViewModel = LocalMemos.current
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val colors = MoeDesignTokens.colors
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -85,9 +94,14 @@ fun ArchivedMemosCardActionButton(
         IconButton(onClick = { menuExpanded = true }) {
             Icon(Icons.Filled.MoreVert, contentDescription = null)
         }
-        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+        DropdownMenu(
+            expanded = menuExpanded,
+            onDismissRequest = { menuExpanded = false },
+            shape = MoeRadius.shapeLg,
+            containerColor = colors.bgSurface,
+        ) {
             DropdownMenuItem(
-                text = { Text(R.string.restore.string) },
+                text = { Text(R.string.restore.string, color = colors.textPrimary) },
                 onClick = {
                     scope.launch {
                         archivedMemoListViewModel.restoreMemo(memo.identifier).suspendOnSuccess {
@@ -99,23 +113,29 @@ fun ArchivedMemosCardActionButton(
                 leadingIcon = {
                     Icon(
                         Icons.Outlined.Restore,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = colors.textSecondary,
                     )
-                })
+                },
+                colors = MenuDefaults.itemColors(
+                    textColor = colors.textPrimary,
+                    leadingIconColor = colors.textSecondary,
+                ))
             DropdownMenuItem(
-                text = { Text(R.string.delete.string) },
+                text = { Text(R.string.delete.string, color = colors.accentDanger) },
                 onClick = {
                     showDeleteDialog = true
                     menuExpanded = false
                 },
                 colors = MenuDefaults.itemColors(
-                    textColor = MaterialTheme.colorScheme.error,
-                    leadingIconColor = MaterialTheme.colorScheme.error,
+                    textColor = colors.accentDanger,
+                    leadingIconColor = colors.accentDanger,
                 ),
                 leadingIcon = {
                     Icon(
                         Icons.Outlined.Delete,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = colors.accentDanger,
                     )
                 })
         }
@@ -124,7 +144,13 @@ fun ArchivedMemosCardActionButton(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text(R.string.delete_this_memo.string) },
+            title = {
+                Text(
+                    text = R.string.delete_this_memo.string,
+                    style = MoeTypography.title,
+                    color = colors.textPrimary,
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -135,8 +161,8 @@ fun ArchivedMemosCardActionButton(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
-                        containerColor = MaterialTheme.colorScheme.errorContainer
+                        contentColor = colors.textOnAccent,
+                        containerColor = colors.accentDanger
                     )
                 ) {
                     Text(R.string.confirm.string)
@@ -146,7 +172,10 @@ fun ArchivedMemosCardActionButton(
                 TextButton(
                     onClick = {
                         showDeleteDialog = false
-                    }
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = colors.textSecondary,
+                    )
                 ) {
                     Text(R.string.cancel.string)
                 }

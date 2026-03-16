@@ -26,7 +26,6 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -62,6 +61,7 @@ import me.mudkip.moememos.ui.component.Markdown
 import me.mudkip.moememos.ui.designsystem.component.MoeAppBar
 import me.mudkip.moememos.ui.designsystem.component.MoeCard
 import me.mudkip.moememos.ui.designsystem.component.MoeInputField
+import me.mudkip.moememos.ui.designsystem.component.MoeSnackbarHost
 import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.ui.designsystem.token.MoeRadius
 import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
@@ -168,7 +168,7 @@ fun LoginPage(
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = colors.bgApp,
         snackbarHost = {
-            SnackbarHost(hostState = snackbarState)
+            MoeSnackbarHost(hostState = snackbarState)
         },
         topBar = {
             MoeAppBar(
