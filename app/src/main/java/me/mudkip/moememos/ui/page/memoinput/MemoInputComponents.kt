@@ -40,9 +40,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -69,6 +67,9 @@ import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ext.titleResource
 import me.mudkip.moememos.ui.component.Attachment
 import me.mudkip.moememos.ui.component.InputImage
+import me.mudkip.moememos.ui.designsystem.component.MoeAppBar
+import me.mudkip.moememos.ui.designsystem.component.MoeInputField
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.viewmodel.MemoInputViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,13 +80,11 @@ internal fun MemoInputTopBar(
     onClose: () -> Unit,
     onSubmit: () -> Unit
 ) {
-    TopAppBar(
-        title = {
-            if (isEditMode) {
-                Text(R.string.edit.string)
-            } else {
-                Text(R.string.compose.string)
-            }
+    MoeAppBar(
+        title = if (isEditMode) {
+            stringResource(R.string.edit)
+        } else {
+            stringResource(R.string.compose)
         },
         navigationIcon = {
             IconButton(onClick = onClose) {
@@ -144,8 +143,12 @@ internal fun MemoInputBottomBar(
     onFormat: (MarkdownFormat) -> Unit,
 ) {
     val scrollState = rememberScrollState()
+    val colors = MoeDesignTokens.colors
 
-    BottomAppBar {
+    BottomAppBar(
+        containerColor = colors.bgOverlay,
+        contentColor = colors.textPrimary
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -293,15 +296,16 @@ internal fun MemoInputEditor(
                 }
             )
     ) {
-        OutlinedTextField(
+        MoeInputField(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 20.dp, end = 20.dp, bottom = 20.dp)
                 .weight(1f)
                 .focusRequester(focusRequester),
             value = text,
-            label = { Text(R.string.any_thoughts.string) },
             onValueChange = onTextChange,
+            label = stringResource(R.string.any_thoughts),
+            maxLines = Int.MAX_VALUE,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
 

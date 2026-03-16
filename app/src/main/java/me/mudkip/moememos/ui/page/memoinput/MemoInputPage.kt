@@ -38,6 +38,7 @@ import me.mudkip.moememos.data.model.MemoVisibility
 import me.mudkip.moememos.data.model.ShareContent
 import me.mudkip.moememos.ext.popBackStackIfLifecycleIsResumed
 import me.mudkip.moememos.ext.suspendOnErrorMessage
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.ui.page.common.LocalRootNavController
 import me.mudkip.moememos.util.extractCustomTags
 import me.mudkip.moememos.viewmodel.LocalMemos
@@ -58,6 +59,7 @@ fun MemoInputPage(
     val memosViewModel = LocalMemos.current
     val userStateViewModel = LocalUserState.current
     val currentAccount by userStateViewModel.currentAccount.collectAsState()
+    val colors = MoeDesignTokens.colors
     val memo = remember { memosViewModel.memos.toList().find { it.identifier == memoIdentifier } }
     var initialContent by remember { mutableStateOf(memo?.content ?: "") }
     var text by rememberSaveable(stateSaver = TextFieldValue.Saver) {
@@ -141,6 +143,7 @@ fun MemoInputPage(
 
     Scaffold(
         modifier = Modifier.imePadding(),
+        containerColor = colors.bgApp,
         topBar = {
             MemoInputTopBar(
                 isEditMode = memo != null,

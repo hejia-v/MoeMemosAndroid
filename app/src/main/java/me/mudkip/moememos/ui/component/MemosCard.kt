@@ -56,6 +56,7 @@ import me.mudkip.moememos.data.model.MemoEditGesture
 import me.mudkip.moememos.ext.icon
 import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ext.titleResource
+import me.mudkip.moememos.ui.designsystem.component.MoeCard
 import me.mudkip.moememos.ui.page.common.LocalRootNavController
 import me.mudkip.moememos.ui.page.common.RouteName
 import me.mudkip.moememos.viewmodel.LocalMemos
@@ -101,7 +102,7 @@ fun MemosCard(
             }
         )
 
-    Card(
+    MoeCard(
         modifier = cardModifier,
         border = if (memo.pinned) {
             BorderStroke(1.dp, MaterialTheme.colorScheme.primary)

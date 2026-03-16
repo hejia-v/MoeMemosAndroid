@@ -14,7 +14,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -29,11 +28,13 @@ import me.mudkip.moememos.R
 import me.mudkip.moememos.data.model.Account
 import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ui.component.SyncStatusBadge
+import me.mudkip.moememos.ui.designsystem.component.MoeAppBar
+import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.ui.page.common.LocalRootNavController
 import me.mudkip.moememos.ui.page.common.RouteName
 import me.mudkip.moememos.viewmodel.LocalMemos
-import me.mudkip.moememos.viewmodel.ManualSyncResult
 import me.mudkip.moememos.viewmodel.LocalUserState
+import me.mudkip.moememos.viewmodel.ManualSyncResult
 import java.net.URLEncoder
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,6 +50,7 @@ fun MemosHomePage(
     val userStateViewModel = LocalUserState.current
     val currentAccount by userStateViewModel.currentAccount.collectAsState()
     val syncStatus by memosViewModel.syncStatus.collectAsState()
+    val colors = MoeDesignTokens.colors
 
     val expandedFab by remember {
         derivedStateOf {
@@ -74,9 +76,10 @@ fun MemosHomePage(
 
 
     Scaffold(
+        containerColor = colors.bgApp,
         topBar = {
-            TopAppBar(
-                title = { Text(text = R.string.memos.string) },
+            MoeAppBar(
+                title = R.string.memos.string,
                 navigationIcon = {
                     if (drawerState != null) {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
@@ -111,6 +114,8 @@ fun MemosHomePage(
                     rootNavController.navigate(RouteName.INPUT)
                 },
                 expanded = expandedFab,
+                containerColor = colors.accentPrimary,
+                contentColor = colors.textOnAccent,
                 text = { Text(R.string.new_memo.string) },
                 icon = { Icon(Icons.Filled.Add, contentDescription = R.string.compose.string) }
             )
