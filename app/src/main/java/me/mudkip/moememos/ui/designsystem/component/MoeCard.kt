@@ -9,6 +9,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.ui.designsystem.token.MoeElevation
@@ -20,17 +22,19 @@ fun MoeCard(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     border: BorderStroke? = null,
     containerColor: Color = MoeDesignTokens.colors.bgElevated,
+    shape: Shape = MoeRadius.shapeLg,
+    elevation: Dp = MoeElevation.raised,
     content: @Composable () -> Unit,
 ) {
     Card(
         modifier = modifier,
-        shape = MoeRadius.shapeLg,
+        shape = shape,
         border = border,
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = MoeElevation.raised,
+            defaultElevation = elevation,
         ),
     ) {
         Box(modifier = Modifier.padding(contentPadding)) {

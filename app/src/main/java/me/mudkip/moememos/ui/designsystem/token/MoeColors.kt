@@ -22,8 +22,8 @@ data class MoeColors(
 )
 
 val LightMoeColors = MoeColors(
-    bgApp = Color(0xFFF6F4EF),
-    bgSurface = Color(0xFFFFFCF7),
+    bgApp = Color(0xFFF8F6F1),
+    bgSurface = Color(0xFFFFFFFF),
     bgElevated = Color(0xFFFFFFFF),
     bgOverlay = Color(0xFFFFF8EF),
     bgPressed = Color(0xFFECE6DC),
@@ -31,7 +31,7 @@ val LightMoeColors = MoeColors(
     textSecondary = Color(0xFF596068),
     textTertiary = Color(0xFF808891),
     textOnAccent = Color(0xFFFFFFFF),
-    strokeSubtle = Color(0xFFE5DED2),
+    strokeSubtle = Color(0xFFF0EBE1),
     strokeStrong = Color(0xFFCFC6B9),
     accentPrimary = Color(0xFF17643E),
     accentSoft = Color(0xFFDCEFE3),

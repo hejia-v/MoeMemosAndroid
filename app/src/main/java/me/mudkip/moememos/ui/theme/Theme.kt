@@ -1,6 +1,8 @@
 package me.mudkip.moememos.ui.theme
 
 import android.app.Activity
+import android.graphics.Color.TRANSPARENT
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -8,7 +10,6 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
 import me.mudkip.moememos.data.model.AppThemeMode
 import me.mudkip.moememos.ui.designsystem.token.DarkMoeColors
@@ -95,8 +96,11 @@ fun MoeMemosTheme(
         SideEffect {
             val window = (view.context as Activity).window
             val insetsController = WindowCompat.getInsetsController(window, view)
-            window.statusBarColor = colorScheme.background.toArgb()
-            window.navigationBarColor = colorScheme.surface.toArgb()
+            window.statusBarColor = TRANSPARENT
+            window.navigationBarColor = TRANSPARENT
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.isNavigationBarContrastEnforced = false
+            }
             insetsController.isAppearanceLightStatusBars = !darkTheme
             insetsController.isAppearanceLightNavigationBars = !darkTheme
         }

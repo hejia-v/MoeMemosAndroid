@@ -1,14 +1,26 @@
 package me.mudkip.moememos.ui.page.memos
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
@@ -16,16 +28,15 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,17 +44,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import me.mudkip.moememos.R
 import me.mudkip.moememos.data.model.Account
+import me.mudkip.moememos.data.model.SyncStatus
 import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ui.component.SyncStatusBadge
-import me.mudkip.moememos.ui.designsystem.component.MoeAppBar
-import me.mudkip.moememos.ui.designsystem.component.MoeCard
 import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
 import me.mudkip.moememos.ui.designsystem.token.MoeTypography
@@ -62,19 +73,11 @@ fun MemosHomePage(
 ) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val rootNavController = LocalRootNavController.current
     val memosViewModel = LocalMemos.current
     val userStateViewModel = LocalUserState.current
     val currentAccount by userStateViewModel.currentAccount.collectAsState()
     val syncStatus by memosViewModel.syncStatus.collectAsState()
-    val colors = MoeDesignTokens.colors
-
-    val expandedFab by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex == 0
-        }
-    }
     var syncAlert by remember { mutableStateOf<HomeSyncAlert?>(null) }
 
     suspend fun requestManualSync(allowHigherV1Version: String? = null) {
@@ -83,65 +86,59 @@ fun MemosHomePage(
             is ManualSyncResult.Blocked -> {
                 syncAlert = HomeSyncAlert.Blocked(result.message)
             }
+
             is ManualSyncResult.RequiresConfirmation -> {
                 syncAlert = HomeSyncAlert.RequiresConfirmation(result.version, result.message)
             }
+
             is ManualSyncResult.Failed -> {
                 syncAlert = HomeSyncAlert.Failed(result.message)
             }
         }
     }
 
-
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        containerColor = colors.bgApp,
-        topBar = {
-            MoeAppBar(
-                title = R.string.memos.string,
-                scrollBehavior = scrollBehavior,
-                navigationIcon = {
-                    if (drawerState != null) {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Filled.Menu, contentDescription = R.string.menu.string)
-                        }
-                    }
-                },
-                actions = {
-                    if (currentAccount !is Account.Local) {
-                        SyncStatusBadge(
-                            syncing = syncStatus.syncing,
-                            unsyncedCount = syncStatus.unsyncedCount,
-                            onSync = {
-                                scope.launch {
-                                    requestManualSync()
-                                }
-                            }
-                        )
-                    }
-                    IconButton(onClick = {
-                        navController.navigate(RouteName.SEARCH)
-                    }) {
-                        Icon(Icons.Filled.Search, contentDescription = R.string.search.string)
-                    }
-                }
-            )
-        },
-
+        containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            FloatingActionButton(
                 onClick = {
                     rootNavController.navigate(RouteName.INPUT)
                 },
-                expanded = expandedFab,
-                containerColor = colors.accentPrimary,
-                contentColor = colors.textOnAccent,
-                text = { Text(R.string.new_memo.string) },
-                icon = { Icon(Icons.Filled.Add, contentDescription = R.string.compose.string) }
-            )
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .shadow(
+                        elevation = 22.dp,
+                        shape = CircleShape,
+                    ),
+                shape = CircleShape,
+                containerColor = Color(0xFFF7C41D),
+                contentColor = Color(0xFF3A2A00),
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp,
+                    focusedElevation = 0.dp,
+                    hoveredElevation = 0.dp,
+                ),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = R.string.compose.string,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
         },
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MoeDesignTokens.colors.bgApp)
+        ) {
+            val topScrimColor = Color(0xFFFAF9F6)
 
-        content = { innerPadding ->
+            HomeBackground()
+
+            // Layer 1 (bottom): scrollable card list
             MemosList(
                 lazyListState = listState,
                 contentPadding = innerPadding,
@@ -152,23 +149,69 @@ fun MemosHomePage(
                         restoreState = true
                     }
                 },
+                layoutStyle = MemosListLayoutStyle.HomeGrid,
                 headerContent = {
-                    HomeOverviewCard(
-                        memoCount = memosViewModel.memos.size,
-                        currentAccount = currentAccount,
-                        syncing = syncStatus.syncing,
-                        unsyncedCount = syncStatus.unsyncedCount,
-                        collapsedFraction = remember(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
-                            when {
-                                listState.firstVisibleItemIndex > 0 -> 1f
-                                else -> (listState.firstVisibleItemScrollOffset / 180f).coerceIn(0f, 1f)
-                            }
-                        },
+                    // Spacer to reserve space for the fixed toolbar above
+                    Spacer(modifier = Modifier
+                        .statusBarsPadding()
+                        .height(64.dp)
                     )
                 },
             )
+
+            // Layer 2: keep the status bar area fully solid so content never shows through.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsTopHeight(WindowInsets.statusBars)
+                    .align(Alignment.TopCenter)
+                    .background(topScrimColor)
+            )
+
+            // Layer 3 (middle): stronger fade overlay behind the toolbar
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .height(96.dp)
+                    .align(Alignment.TopCenter)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                topScrimColor,
+                                topScrimColor.copy(alpha = 0.98f),
+                                topScrimColor.copy(alpha = 0.86f),
+                                topScrimColor.copy(alpha = 0.62f),
+                                Color.Transparent,
+                            )
+                        )
+                    )
+            )
+
+            // Layer 4 (top): fixed floating toolbar
+            HomeHeader(
+                showDrawerButton = drawerState != null,
+                currentAccount = currentAccount,
+                syncStatus = syncStatus,
+                memoCount = memosViewModel.memos.size,
+                onSync = {
+                    scope.launch {
+                        requestManualSync()
+                    }
+                },
+                onSearch = {
+                    navController.navigate(RouteName.SEARCH)
+                },
+                onPrimaryAction = {
+                    if (drawerState != null) {
+                        scope.launch { drawerState.open() }
+                    } else {
+                        rootNavController.navigate(RouteName.SETTINGS)
+                    }
+                },
+            )
         }
-    )
+    }
 
     when (val alert = syncAlert) {
         null -> Unit
@@ -184,6 +227,7 @@ fun MemosHomePage(
                 }
             )
         }
+
         is HomeSyncAlert.RequiresConfirmation -> {
             AlertDialog(
                 onDismissRequest = { syncAlert = null },
@@ -208,6 +252,7 @@ fun MemosHomePage(
                 }
             )
         }
+
         is HomeSyncAlert.Failed -> {
             AlertDialog(
                 onDismissRequest = { syncAlert = null },
@@ -230,90 +275,173 @@ private sealed class HomeSyncAlert {
 }
 
 @Composable
-private fun HomeOverviewCard(
-    memoCount: Int,
+private fun HomeBackground() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFFAF9F6),
+                        Color(0xFFF7F5F0),
+                        Color(0xFFF3F0EB),
+                    )
+                )
+            )
+    )
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .size(360.dp)
+            .background(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.94f),
+                        Color.White.copy(alpha = 0.20f),
+                        Color.Transparent,
+                    )
+                )
+            )
+    )
+}
+
+@Composable
+private fun HomeHeader(
+    showDrawerButton: Boolean,
     currentAccount: Account?,
-    syncing: Boolean,
-    unsyncedCount: Int,
-    collapsedFraction: Float,
+    syncStatus: SyncStatus,
+    memoCount: Int,
+    onSync: () -> Unit,
+    onSearch: () -> Unit,
+    onPrimaryAction: () -> Unit,
 ) {
     val colors = MoeDesignTokens.colors
-    val alpha by animateFloatAsState(
-        targetValue = 1f - (collapsedFraction * 0.55f),
-        animationSpec = tween(durationMillis = 180),
-        label = "home_overview_alpha"
-    )
-    val offsetY by animateFloatAsState(
-        targetValue = -(collapsedFraction * 10f),
-        animationSpec = tween(durationMillis = 180),
-        label = "home_overview_offset"
-    )
 
-    MoeCard(
+    Row(
         modifier = Modifier
-            .offset(y = offsetY.dp)
-            .alpha(alpha)
-            .padding(horizontal = MoeSpacing.xl, vertical = MoeSpacing.sm)
+            .statusBarsPadding()
+            .padding(top = MoeSpacing.sm, bottom = MoeSpacing.md)
+            .padding(horizontal = MoeSpacing.xl)
             .fillMaxWidth(),
-        contentPadding = PaddingValues(
-            horizontal = MoeSpacing.xl,
-            vertical = MoeSpacing.xl,
-        ),
-        containerColor = colors.bgSurface,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column {
+        HomeHeaderIconButton(
+            onClick = onPrimaryAction,
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Menu,
+                    contentDescription = if (showDrawerButton) R.string.menu.string else R.string.settings.string,
+                    tint = colors.textPrimary,
+                )
+            }
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = MoeSpacing.md)
+        ) {
             Text(
-                text = R.string.memos_home_title.string,
-                style = MoeTypography.headline,
+                text = R.string.memos.string,
+                style = MoeTypography.title,
                 color = colors.textPrimary,
             )
-            Text(
-                text = R.string.memos_home_subtitle.string,
-                style = MoeTypography.body,
-                color = colors.textSecondary,
-                modifier = Modifier.padding(top = MoeSpacing.sm),
-            )
-            Row(
-                modifier = Modifier
-                    .padding(top = MoeSpacing.xl)
-                    .fillMaxWidth(),
+Row(
                 verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 3.dp)
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = R.string.memos_home_total.string,
-                        style = MoeTypography.caption,
-                        color = colors.textTertiary,
-                    )
-                    Text(
-                        text = memoCount.toString(),
-                        style = MoeTypography.display,
-                        color = colors.textPrimary,
-                    )
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = if (currentAccount is Account.Local) {
-                            R.string.memos_home_local_mode.string
-                        } else if (syncing) {
-                            R.string.memos_home_syncing.string
-                        } else {
-                            R.string.sync_status_unsynced.string
-                        },
-                        style = MoeTypography.caption,
-                        color = colors.textTertiary,
-                    )
-                    Text(
-                        text = if (currentAccount is Account.Local || syncing) {
-                            " "
-                        } else {
-                            unsyncedCount.toString()
-                        },
-                        style = MoeTypography.title,
-                        color = colors.accentPrimary,
+                HomeInlineStat(value = memoCount.toString())
+                if (currentAccount !is Account.Local) {
+                    HomeInlineStat(
+                        value = if (syncStatus.syncing) "…" else syncStatus.unsyncedCount.toString(),
+                        emphasize = !syncStatus.syncing && syncStatus.unsyncedCount > 0,
                     )
                 }
             }
         }
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = colors.bgSurface.copy(alpha = 0.95f),
+            shadowElevation = 4.dp,
+            tonalElevation = 0.dp,
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = MoeSpacing.xs, vertical = MoeSpacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (currentAccount !is Account.Local) {
+                    SyncStatusBadge(
+                        syncing = syncStatus.syncing,
+                        unsyncedCount = syncStatus.unsyncedCount,
+                        onSync = onSync
+                    )
+                }
+                HomeHeaderIconButton(
+                    onClick = onSearch,
+                    tonal = true,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = R.string.search.string,
+                            tint = colors.textPrimary,
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeHeaderIconButton(
+    onClick: () -> Unit,
+    tonal: Boolean = false,
+    icon: @Composable () -> Unit,
+) {
+    val colors = MoeDesignTokens.colors
+
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .then(
+                if (tonal) {
+                    Modifier
+                } else {
+                    Modifier.shadow(4.dp, CircleShape)
+                }
+            )
+            .clip(CircleShape)
+            .background(if (tonal) colors.bgOverlay else colors.bgSurface.copy(alpha = 0.96f))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        icon()
+    }
+}
+
+@Composable
+private fun HomeInlineStat(
+    value: String,
+    emphasize: Boolean = false,
+) {
+    val colors = MoeDesignTokens.colors
+    val dotColor = if (emphasize) colors.accentPrimary else colors.textTertiary
+    val textColor = if (emphasize) colors.accentPrimary else colors.textPrimary
+
+    Row(
+        modifier = Modifier.padding(end = MoeSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(5.dp)
+                .clip(CircleShape)
+                .background(dotColor.copy(alpha = 0.7f))
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = value,
+            style = MoeTypography.caption,
+            color = textColor,
+        )
     }
 }

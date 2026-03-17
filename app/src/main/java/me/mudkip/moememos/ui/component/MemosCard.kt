@@ -7,8 +7,8 @@ import android.text.format.DateUtils
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
@@ -52,7 +52,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import com.skydoves.sandwich.suspendOnSuccess
 import kotlinx.coroutines.launch
 import me.mudkip.moememos.R
@@ -65,6 +69,7 @@ import me.mudkip.moememos.ext.titleResource
 import me.mudkip.moememos.ui.designsystem.component.MoeCard
 import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.ui.designsystem.token.MoeMotion
+import me.mudkip.moememos.ui.designsystem.token.MoeRadius
 import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
 import me.mudkip.moememos.ui.designsystem.token.MoeTypography
 import me.mudkip.moememos.ui.page.common.LocalRootNavController
@@ -79,7 +84,9 @@ fun MemosCard(
     editGesture: MemoEditGesture = MemoEditGesture.NONE,
     previewMode: Boolean = false,
     showSyncStatus: Boolean = false,
-    onTagClick: ((String) -> Unit)? = null
+    onTagClick: ((String) -> Unit)? = null,
+    style: MemosCardStyle = MemosCardStyle.Standard,
+    modifier: Modifier = Modifier,
 ) {
     val memosViewModel = LocalMemos.current
     val rootNavController = LocalRootNavController.current
@@ -125,8 +132,16 @@ fun MemosCard(
             alpha = entryAlpha
             translationY = entryOffset.toPx()
         }
-        .padding(horizontal = MoeSpacing.xl, vertical = MoeSpacing.sm)
-        .fillMaxWidth()
+        .then(
+            when (style) {
+                MemosCardStyle.Standard -> Modifier
+                    .padding(horizontal = MoeSpacing.xl, vertical = MoeSpacing.sm)
+                    .fillMaxWidth()
+
+                MemosCardStyle.HomeCompact -> Modifier.fillMaxWidth()
+            }
+        )
+        .then(modifier)
         .combinedClickable(
             interactionSource = interactionSource,
             indication = null,
@@ -153,85 +168,203 @@ fun MemosCard(
             }
         )
 
-    MoeCard(
-        modifier = cardModifier,
-        border = if (memo.pinned) {
-            BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
-        } else {
-            null
-        },
-        containerColor = colors.bgElevated
-    ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .padding(
-                        start = MoeSpacing.lg,
-                        end = MoeSpacing.sm,
-                        top = MoeSpacing.md,
-                    )
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+    when (style) {
+        MemosCardStyle.Standard -> {
+            MoeCard(
+                modifier = cardModifier,
+                border = if (memo.pinned) {
+                    BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                } else {
+                    null
+                },
+                containerColor = colors.bgElevated
             ) {
-                Text(
-                    DateUtils.getRelativeTimeSpanString(
-                        memo.date.toEpochMilli(),
-                        System.currentTimeMillis(),
-                        DateUtils.SECOND_IN_MILLIS
-                    ).toString(),
-                    style = MoeTypography.caption,
-                    color = colors.textTertiary
-                )
-                if (showSyncStatus && memo.needsSync) {
-                    Icon(
-                        imageVector = Icons.Outlined.CloudOff,
-                        contentDescription = R.string.memo_sync_pending.string,
+                Column {
+                    Row(
                         modifier = Modifier
-                            .padding(start = 5.dp)
-                            .size(20.dp),
-                        tint = colors.accentDanger
-                    )
-                }
-                if (LocalUserState.current.currentUser?.defaultVisibility != memo.visibility) {
-                    Icon(
-                        memo.visibility.icon,
-                        contentDescription = stringResource(memo.visibility.titleResource),
-                        modifier = Modifier
-                            .padding(start = 5.dp)
-                            .size(20.dp),
-                        tint = colors.textTertiary
-                    )
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                MemosCardActionButton(memo)
-            }
-
-            MemoContent(
-                memo,
-                previewMode = previewMode,
-                checkboxChange = { checked, startOffset, endOffset ->
-                    scope.launch {
-                        var text = memo.content.substring(startOffset, endOffset)
-                        text = if (checked) {
-                            text.replace("[ ]", "[x]")
-                        } else {
-                            text.replace("[x]", "[ ]")
+                            .padding(
+                                start = MoeSpacing.lg,
+                                end = MoeSpacing.sm,
+                                top = MoeSpacing.md,
+                            )
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            DateUtils.getRelativeTimeSpanString(
+                                memo.date.toEpochMilli(),
+                                System.currentTimeMillis(),
+                                DateUtils.SECOND_IN_MILLIS
+                            ).toString(),
+                            style = MoeTypography.caption,
+                            color = colors.textTertiary
+                        )
+                        if (showSyncStatus && memo.needsSync) {
+                            Icon(
+                                imageVector = Icons.Outlined.CloudOff,
+                                contentDescription = R.string.memo_sync_pending.string,
+                                modifier = Modifier
+                                    .padding(start = 5.dp)
+                                    .size(20.dp),
+                                tint = colors.accentDanger
+                            )
                         }
-                        memosViewModel.editMemo(
-                            memo.identifier,
-                            memo.content.replaceRange(startOffset, endOffset, text),
-                            memo.resources,
-                            memo.visibility
+                        if (LocalUserState.current.currentUser?.defaultVisibility != memo.visibility) {
+                            Icon(
+                                memo.visibility.icon,
+                                contentDescription = stringResource(memo.visibility.titleResource),
+                                modifier = Modifier
+                                    .padding(start = 5.dp)
+                                    .size(20.dp),
+                                tint = colors.textTertiary
+                            )
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        MemosCardActionButton(memo)
+                    }
+
+                    MemoContent(
+                        memo,
+                        previewMode = previewMode,
+                        checkboxChange = { checked, startOffset, endOffset ->
+                            scope.launch {
+                                var text = memo.content.substring(startOffset, endOffset)
+                                text = if (checked) {
+                                    text.replace("[ ]", "[x]")
+                                } else {
+                                    text.replace("[x]", "[ ]")
+                                }
+                                memosViewModel.editMemo(
+                                    memo.identifier,
+                                    memo.content.replaceRange(startOffset, endOffset, text),
+                                    memo.resources,
+                                    memo.visibility
+                                )
+                            }
+                        },
+                        onViewMore = {
+                            onClick(memo)
+                        },
+                        onTagClick = onTagClick
+                    )
+                }
+            }
+        }
+
+        MemosCardStyle.HomeCompact -> {
+            val preview = remember(memo.content) { memo.buildHomeCardPreview() }
+
+            MoeCard(
+                modifier = cardModifier,
+                border = null,
+                containerColor = colors.bgSurface,
+                shape = MoeRadius.shapeXl,
+                elevation = 4.dp,
+            ) {
+                Column(
+                    modifier = Modifier.padding(
+                        start = MoeSpacing.lg,
+                        end = MoeSpacing.lg,
+                        top = MoeSpacing.lg,
+                        bottom = MoeSpacing.lg,
+                    )
+                ) {
+                    if (memo.pinned || (showSyncStatus && memo.needsSync)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = MoeSpacing.sm),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (memo.pinned) {
+                                Text(
+                                    text = R.string.pin.string,
+                                    style = MoeTypography.caption,
+                                    color = colors.accentPrimary,
+                                )
+                            }
+                            Spacer(modifier = Modifier.weight(1f))
+                            if (showSyncStatus && memo.needsSync) {
+                                Icon(
+                                    imageVector = Icons.Outlined.CloudOff,
+                                    contentDescription = R.string.memo_sync_pending.string,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = colors.accentDanger
+                                )
+                            }
+                        }
+                    }
+                    Text(
+                        text = preview.title,
+                        style = MoeTypography.title,
+                        color = colors.textPrimary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (preview.body.isNotBlank()) {
+                        Text(
+                            text = preview.body,
+                            style = MoeTypography.body,
+                            color = colors.textSecondary,
+                            maxLines = 5,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = MoeSpacing.sm),
                         )
                     }
-                },
-                onViewMore = {
-                    onClick(memo)
-                },
-                onTagClick = onTagClick
-            )
+                    Text(
+                        text = remember(memo.date) {
+                            SimpleDateFormat("M月d日", Locale.CHINESE)
+                                .format(Date(memo.date.toEpochMilli()))
+                        },
+                        style = MoeTypography.caption,
+                        color = colors.textTertiary,
+                        modifier = Modifier.padding(top = MoeSpacing.md),
+                    )
+                }
+            }
         }
     }
+}
+
+enum class MemosCardStyle {
+    Standard,
+    HomeCompact,
+}
+
+private data class HomeCardPreview(
+    val title: String,
+    val body: String,
+)
+
+private fun MemoEntity.buildHomeCardPreview(): HomeCardPreview {
+    val normalized = content
+        .replace(Regex("!\\[[^\\]]*]\\([^)]*\\)"), " ")
+        .replace(Regex("\\[([^\\]]+)]\\([^)]*\\)"), "$1")
+        .replace(Regex("`{1,3}"), "")
+        .replace(Regex("^\\s{0,3}#{1,6}\\s*", RegexOption.MULTILINE), "")
+        .replace(Regex("^\\s{0,3}>\\s?", RegexOption.MULTILINE), "")
+        .replace(Regex("^\\s*[-*+]\\s+", RegexOption.MULTILINE), "")
+        .replace(Regex("^\\s*\\d+\\.\\s+", RegexOption.MULTILINE), "")
+        .replace("[ ]", "")
+        .replace("[x]", "")
+        .replace(Regex("\\s+"), " ")
+        .trim()
+
+    val sentences = normalized
+        .split(Regex("[\\n.!?\\u3002\\uFF01\\uFF1F]"))
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+
+    val title = sentences.firstOrNull()?.take(36)
+        ?: content.lines().firstOrNull { it.isNotBlank() }?.trim()?.take(36)
+        ?: "Memo"
+    val body = when {
+        sentences.size > 1 -> sentences.drop(1).joinToString(" ")
+        normalized.length > title.length -> normalized.removePrefix(title).trim()
+        else -> ""
+    }
+
+    return HomeCardPreview(title = title, body = body)
 }
 
 @Composable
@@ -257,7 +390,7 @@ fun MemosCardActionButton(
         DropdownMenu(
             expanded = menuExpanded,
             onDismissRequest = { menuExpanded = false },
-            shape = me.mudkip.moememos.ui.designsystem.token.MoeRadius.shapeLg,
+            shape = MoeRadius.shapeLg,
             containerColor = colors.bgSurface,
         ) {
             if (memo.pinned) {
@@ -280,7 +413,8 @@ fun MemosCardActionButton(
                     colors = MenuDefaults.itemColors(
                         textColor = colors.textPrimary,
                         leadingIconColor = colors.textSecondary,
-                    ))
+                    )
+                )
             } else {
                 DropdownMenuItem(
                     text = { Text(R.string.pin.string, color = colors.textPrimary) },
@@ -301,7 +435,8 @@ fun MemosCardActionButton(
                     colors = MenuDefaults.itemColors(
                         textColor = colors.textPrimary,
                         leadingIconColor = colors.textSecondary,
-                    ))
+                    )
+                )
             }
             DropdownMenuItem(
                 text = { Text(R.string.edit.string, color = colors.textPrimary) },
@@ -318,7 +453,8 @@ fun MemosCardActionButton(
                 colors = MenuDefaults.itemColors(
                     textColor = colors.textPrimary,
                     leadingIconColor = colors.textSecondary,
-                ))
+                )
+            )
             DropdownMenuItem(
                 text = { Text(R.string.share.string, color = colors.textPrimary) },
                 onClick = {
@@ -340,7 +476,8 @@ fun MemosCardActionButton(
                 colors = MenuDefaults.itemColors(
                     textColor = colors.textPrimary,
                     leadingIconColor = colors.textSecondary,
-                ))
+                )
+            )
             DropdownMenuItem(
                 text = { Text(R.string.copy.string, color = colors.textPrimary) },
                 onClick = {
@@ -359,7 +496,8 @@ fun MemosCardActionButton(
                 colors = MenuDefaults.itemColors(
                     textColor = colors.textPrimary,
                     leadingIconColor = colors.textSecondary,
-                ))
+                )
+            )
             if (currentAccount !is Account.Local) {
                 DropdownMenuItem(
                     text = { Text(R.string.copy_link.string, color = colors.textPrimary) },
@@ -385,7 +523,8 @@ fun MemosCardActionButton(
                     colors = MenuDefaults.itemColors(
                         textColor = colors.textPrimary,
                         leadingIconColor = colors.textSecondary,
-                    ))
+                    )
+                )
             }
             DropdownMenuItem(
                 text = { Text(R.string.archive.string, color = colors.textSecondary) },
@@ -406,7 +545,8 @@ fun MemosCardActionButton(
                         contentDescription = null,
                         tint = colors.textSecondary,
                     )
-                })
+                }
+            )
             DropdownMenuItem(
                 text = { Text(R.string.delete.string, color = colors.accentDanger) },
                 onClick = {
@@ -423,7 +563,8 @@ fun MemosCardActionButton(
                         contentDescription = null,
                         tint = colors.accentDanger,
                     )
-                })
+                }
+            )
         }
     }
 

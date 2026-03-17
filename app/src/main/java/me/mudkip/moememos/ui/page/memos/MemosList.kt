@@ -2,15 +2,20 @@ package me.mudkip.moememos.ui.page.memos
 
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -37,6 +42,7 @@ import me.mudkip.moememos.data.model.Settings
 import me.mudkip.moememos.ext.settingsDataStore
 import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ui.component.MemosCard
+import me.mudkip.moememos.ui.component.MemosCardStyle
 import me.mudkip.moememos.ui.designsystem.component.MoeCard
 import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
@@ -58,13 +64,13 @@ fun MemosList(
     onRefresh: (suspend () -> Unit)? = null,
     onTagClick: ((String) -> Unit)? = null,
     headerContent: (@Composable () -> Unit)? = null,
+    layoutStyle: MemosListLayoutStyle = MemosListLayoutStyle.List,
 ) {
     val context = LocalContext.current
     val navController = LocalRootNavController.current
     val viewModel = LocalMemos.current
     val userStateViewModel = LocalUserState.current
     val currentAccount by userStateViewModel.currentAccount.collectAsState()
-    val colors = MoeDesignTokens.colors
     val settings by context.settingsDataStore.data.collectAsState(initial = Settings())
     val editGesture = settings.usersList
         .firstOrNull { it.accountKey == settings.currentUser }
@@ -79,26 +85,23 @@ fun MemosList(
         val nonPinned = viewModel.memos.filter { !it.pinned }
         var fullList = pinned + nonPinned
 
-        tag?.let { tag ->
+        tag?.let { selectedTag ->
             fullList = fullList.filter { memo ->
-                memo.content.contains("#$tag") ||
-                        memo.content.contains("#$tag/")
+                memo.content.contains("#$selectedTag") || memo.content.contains("#$selectedTag/")
             }
         }
 
-        searchString?.let { searchString ->
-            if (searchString.isNotEmpty()) {
+        searchString?.let { query ->
+            if (query.isNotEmpty()) {
                 fullList = fullList.filter { memo ->
-                    memo.content.contains(searchString, true)
+                    memo.content.contains(query, true)
                 }
             }
         }
 
         fullList
     }
-    var listTopId: String? by rememberSaveable {
-        mutableStateOf(null)
-    }
+    var listTopId: String? by rememberSaveable { mutableStateOf(null) }
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
@@ -113,9 +116,11 @@ fun MemosList(
                         is ManualSyncResult.Blocked -> {
                             syncAlert = PullRefreshSyncAlert.Blocked(result.message)
                         }
+
                         is ManualSyncResult.RequiresConfirmation -> {
                             syncAlert = PullRefreshSyncAlert.RequiresConfirmation(result.version, result.message)
                         }
+
                         is ManualSyncResult.Failed -> {
                             syncAlert = PullRefreshSyncAlert.Failed(result.message)
                         }
@@ -127,64 +132,93 @@ fun MemosList(
         state = refreshState,
         modifier = Modifier.padding(contentPadding)
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = lazyListState,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            contentPadding = PaddingValues(
-                top = MoeSpacing.sm,
-                bottom = MoeSpacing.xxxl,
-            )
-        ) {
-            if (headerContent != null) {
-                item(key = "header") {
-                    Column {
-                        headerContent()
+        when (layoutStyle) {
+            MemosListLayoutStyle.List -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = lazyListState,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    contentPadding = PaddingValues(
+                        top = MoeSpacing.sm,
+                        bottom = MoeSpacing.xxxl,
+                    )
+                ) {
+                    if (headerContent != null) {
+                        item(key = "header") {
+                            headerContent()
+                        }
                     }
-                }
-            }
 
-            if (filteredMemos.isEmpty()) {
-                item(key = "empty") {
-                    MoeCard(
-                        modifier = Modifier
-                            .padding(horizontal = MoeSpacing.xl, vertical = MoeSpacing.sm)
-                            .fillMaxWidth(),
-                        contentPadding = PaddingValues(
-                            horizontal = MoeSpacing.xl,
-                            vertical = MoeSpacing.xxl,
-                        )
-                    ) {
-                        Column {
-                            Text(
-                                text = R.string.no_memos.string,
-                                style = MoeTypography.title,
-                                color = colors.textPrimary,
-                            )
-                            Text(
-                                text = R.string.memos_home_subtitle.string,
-                                style = MoeTypography.body,
-                                color = colors.textSecondary,
-                                modifier = Modifier.padding(top = MoeSpacing.sm),
+                    if (filteredMemos.isEmpty()) {
+                        item(key = "empty") {
+                            EmptyMemosCard(
+                                modifier = Modifier.padding(horizontal = MoeSpacing.xl, vertical = MoeSpacing.sm)
                             )
                         }
                     }
+
+                    items(filteredMemos, key = { it.identifier }) { memo ->
+                        MemoListItem(
+                            memoIdentifier = memo.identifier,
+                            onOpen = {
+                                navController.navigate("${RouteName.MEMO_DETAIL}?memoId=${Uri.encode(it)}")
+                            },
+                            editGesture = editGesture ?: MemoEditGesture.NONE,
+                            showSyncStatus = currentAccount !is Account.Local,
+                            onTagClick = onTagClick,
+                        )
+                    }
                 }
             }
 
-            items(filteredMemos, key = { it.identifier }) { memo ->
-                MemosCard(
-                    memo = memo,
-                    onClick = { selectedMemo ->
-                        navController.navigate(
-                            "${RouteName.MEMO_DETAIL}?memoId=${Uri.encode(selectedMemo.identifier)}"
-                        )
-                    },
-                    editGesture = editGesture ?: MemoEditGesture.NONE,
-                    previewMode = true,
-                    showSyncStatus = currentAccount !is Account.Local,
-                    onTagClick = onTagClick
-                )
+            MemosListLayoutStyle.HomeGrid -> {
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    val minCardWidth = if (maxWidth < 520.dp) 150.dp else 184.dp
+
+                    LazyVerticalStaggeredGrid(
+                        columns = StaggeredGridCells.Adaptive(minSize = minCardWidth),
+                        modifier = Modifier.fillMaxSize(),
+                        verticalItemSpacing = MoeSpacing.md,
+                        horizontalArrangement = Arrangement.spacedBy(MoeSpacing.md),
+                        contentPadding = PaddingValues(
+                            start = MoeSpacing.xl,
+                            end = MoeSpacing.xl,
+                            top = MoeSpacing.sm,
+                            bottom = MoeSpacing.xxxl,
+                        ),
+                    ) {
+                        if (headerContent != null) {
+                            item(
+                                key = "header",
+                                span = StaggeredGridItemSpan.FullLine,
+                            ) {
+                                headerContent()
+                            }
+                        }
+
+                        if (filteredMemos.isEmpty()) {
+                            item(
+                                key = "empty",
+                                span = StaggeredGridItemSpan.FullLine,
+                            ) {
+                                EmptyMemosCard()
+                            }
+                        } else {
+                            items(filteredMemos, key = { it.identifier }) { memo ->
+                                MemoListItem(
+                                    memoIdentifier = memo.identifier,
+                                    onOpen = {
+                                        navController.navigate("${RouteName.MEMO_DETAIL}?memoId=${Uri.encode(it)}")
+                                    },
+                                    editGesture = editGesture ?: MemoEditGesture.NONE,
+                                    showSyncStatus = currentAccount !is Account.Local,
+                                    onTagClick = onTagClick,
+                                    style = MemosCardStyle.HomeCompact,
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -221,6 +255,7 @@ fun MemosList(
                 }
             )
         }
+
         is PullRefreshSyncAlert.RequiresConfirmation -> {
             AlertDialog(
                 onDismissRequest = { syncAlert = null },
@@ -236,9 +271,11 @@ fun MemosList(
                                     is ManualSyncResult.Blocked -> {
                                         syncAlert = PullRefreshSyncAlert.Blocked(result.message)
                                     }
+
                                     is ManualSyncResult.RequiresConfirmation -> {
                                         syncAlert = PullRefreshSyncAlert.RequiresConfirmation(result.version, result.message)
                                     }
+
                                     is ManualSyncResult.Failed -> {
                                         syncAlert = PullRefreshSyncAlert.Failed(result.message)
                                     }
@@ -256,6 +293,7 @@ fun MemosList(
                 }
             )
         }
+
         is PullRefreshSyncAlert.Failed -> {
             AlertDialog(
                 onDismissRequest = { syncAlert = null },
@@ -266,6 +304,61 @@ fun MemosList(
                         Text(R.string.close.string)
                     }
                 }
+            )
+        }
+    }
+}
+
+@Composable
+private fun MemoListItem(
+    memoIdentifier: String,
+    onOpen: (String) -> Unit,
+    editGesture: MemoEditGesture,
+    showSyncStatus: Boolean,
+    onTagClick: ((String) -> Unit)?,
+    style: MemosCardStyle = MemosCardStyle.Standard,
+) {
+    val viewModel = LocalMemos.current
+    val memo = viewModel.memos.firstOrNull { it.identifier == memoIdentifier } ?: return
+
+    MemosCard(
+        memo = memo,
+        onClick = { onOpen(it.identifier) },
+        editGesture = editGesture,
+        previewMode = true,
+        showSyncStatus = showSyncStatus,
+        onTagClick = onTagClick,
+        style = style,
+    )
+}
+
+enum class MemosListLayoutStyle {
+    List,
+    HomeGrid,
+}
+
+@Composable
+private fun EmptyMemosCard(modifier: Modifier = Modifier) {
+    val colors = MoeDesignTokens.colors
+
+    MoeCard(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(
+            horizontal = MoeSpacing.xl,
+            vertical = MoeSpacing.xxl,
+        )
+    ) {
+        Column {
+            Text(
+                text = R.string.no_memos.string,
+                style = MoeTypography.title,
+                color = colors.textPrimary,
+            )
+            Text(
+                text = R.string.memos_home_subtitle.string,
+                style = MoeTypography.body,
+                color = colors.textSecondary,
+                modifier = Modifier.padding(top = MoeSpacing.sm),
             )
         }
     }
