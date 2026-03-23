@@ -25,11 +25,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.mudkip.moememos.R
-import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.ui.designsystem.token.MoeMotion
 import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
@@ -98,7 +98,7 @@ fun SyncStatusBadge(
                     ) {
                         Icon(
                             Icons.Outlined.CloudOff,
-                            contentDescription = R.string.sync_status_unsynced.string,
+                            contentDescription = stringResource(R.string.sync_status_unsynced),
                             tint = colors.accentDanger
                         )
                     }
@@ -107,7 +107,7 @@ fun SyncStatusBadge(
                 SyncBadgeState.Idle -> {
                     Icon(
                         Icons.Outlined.Sync,
-                        contentDescription = R.string.sync_status_sync_now.string,
+                        contentDescription = stringResource(R.string.sync_status_sync_now),
                         tint = colors.textPrimary
                     )
                 }
