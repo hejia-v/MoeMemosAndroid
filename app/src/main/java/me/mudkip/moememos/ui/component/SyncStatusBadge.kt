@@ -25,12 +25,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.mudkip.moememos.R
 import me.mudkip.moememos.ext.string
 import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.ui.designsystem.token.MoeMotion
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
+import me.mudkip.moememos.ui.preview.MoeMemosPreviewTheme
 
 @Composable
 fun SyncStatusBadge(
@@ -117,4 +120,42 @@ private enum class SyncBadgeState {
     Syncing,
     Unsynced,
     Idle,
+}
+
+// ==================== Previews ====================
+
+@PreviewLightDark
+@Composable
+private fun SyncStatusBadgeIdlePreview() {
+    MoeMemosPreviewTheme {
+        SyncStatusBadge(
+            syncing = false,
+            unsyncedCount = 0,
+            onSync = {}
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SyncStatusBadgeSyncingPreview() {
+    MoeMemosPreviewTheme {
+        SyncStatusBadge(
+            syncing = true,
+            unsyncedCount = 0,
+            onSync = {}
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SyncStatusBadgeUnsyncedPreview() {
+    MoeMemosPreviewTheme {
+        SyncStatusBadge(
+            syncing = false,
+            unsyncedCount = 5,
+            onSync = {}
+        )
+    }
 }

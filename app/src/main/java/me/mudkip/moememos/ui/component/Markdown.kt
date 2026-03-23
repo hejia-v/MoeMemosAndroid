@@ -1,6 +1,8 @@
 package me.mudkip.moememos.ui.component
 
 import android.net.Uri
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -14,6 +16,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -26,6 +29,7 @@ import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.mikepenz.markdown.coil3.Coil3ImageTransformerImpl
@@ -42,7 +46,9 @@ import com.mikepenz.markdown.model.rememberMarkdownState
 import com.mikepenz.markdown.utils.getUnescapedTextInNode
 import org.intellij.markdown.MarkdownTokenTypes
 import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
+import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
 import me.mudkip.moememos.ui.designsystem.token.MoeTypography
+import me.mudkip.moememos.ui.preview.MoeMemosPreviewTheme
 import me.mudkip.moememos.util.findCustomTagMatches
 import me.mudkip.moememos.util.getCustomTagName
 import me.mudkip.moememos.util.isCustomTagSupportedNode
@@ -244,3 +250,41 @@ private fun resolveMarkdownImageLink(link: String, imageBaseUrl: String?): Strin
 }
 
 private const val TAG_LINK_PREFIX = "moememos://tag/"
+
+// ==================== Previews ====================
+
+private val previewUriHandler = object : UriHandler {
+    override fun openUri(uri: String) { }
+}
+
+@PreviewLightDark
+@Composable
+private fun MarkdownPreview() {
+    MoeMemosPreviewTheme {
+        CompositionLocalProvider(LocalUriHandler provides previewUriHandler) {
+            Column(modifier = Modifier.padding(MoeSpacing.lg)) {
+                Markdown(
+                    text = """
+                        # Heading 1
+
+                        This is a paragraph with **bold** and *italic* text.
+
+                        ## Heading 2
+
+                        - List item 1
+                        - List item 2
+                        - [ ] Checkbox item
+
+                        ### Code Block
+
+                        ```kotlin
+                        fun hello() = "World"
+                        ```
+
+                        [A link](https://example.com) and #tag
+                    """.trimIndent()
+                )
+            }
+        }
+    }
+}
