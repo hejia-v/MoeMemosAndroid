@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import me.mudkip.moememos.data.model.Memo
 import me.mudkip.moememos.ui.designsystem.component.MoeCard
 import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
@@ -46,9 +47,13 @@ fun ExploreMemoCard(
                 if (memo.creator != null && !TextUtils.isEmpty(memo.creator.name)) {
                     Text(
                         "@${memo.creator.name}",
-                        modifier = Modifier.padding(start = MoeSpacing.md),
+                        modifier = Modifier
+                            .padding(start = MoeSpacing.md)
+                            .weight(1f),
                         style = MoeTypography.caption,
-                        color = colors.textSecondary
+                        color = colors.textSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }

@@ -229,7 +229,7 @@ private fun ResourceListPageContent(
                 EmptyResourceContent(
                     filter = currentFilter,
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
                         .weight(1f)
                 )
             } else if (currentFilter == ResourceFilter.IMAGE) {
@@ -237,7 +237,8 @@ private fun ResourceListPageContent(
                 LazyVerticalStaggeredGrid(
                     columns = StaggeredGridCells.Fixed(2),
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
+                        .weight(1f)
                         .padding(horizontal = MoeSpacing.xl),
                     horizontalArrangement = Arrangement.spacedBy(MoeSpacing.md),
                     verticalItemSpacing = MoeSpacing.md,
@@ -251,7 +252,7 @@ private fun ResourceListPageContent(
                 // Other files list placeholder
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
                         .weight(1f)
                         .padding(MoeSpacing.xl),
                     contentAlignment = Alignment.Center

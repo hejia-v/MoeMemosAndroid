@@ -12,19 +12,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.Upload
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Logout
-import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -32,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import me.mudkip.moememos.ui.component.MemosIcon
@@ -115,7 +112,7 @@ private fun AccountPageContainer(
         containerColor = colors.bgApp,
         topBar = {
             MoeAppBar(
-                title = "Account Detail",
+                title = title,
                 navigationIcon = {
                     IconButton(onClick = { }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -262,17 +259,23 @@ private fun MemosAccountPageContent(
                     modifier = Modifier.size(48.dp)
                 )
                 Spacer(modifier = Modifier.width(MoeSpacing.lg))
-                Column {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
                     Text(
                         text = username,
                         style = MoeTypography.title,
-                        color = colors.textPrimary
+                        color = colors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         text = host,
                         style = MoeTypography.body,
                         color = colors.textSecondary,
-                        modifier = Modifier.padding(top = MoeSpacing.xs)
+                        modifier = Modifier.padding(top = MoeSpacing.xs),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         text = "Started ${formatDate(startDate)}",
@@ -329,7 +332,7 @@ private fun MemosAccountPageContent(
             )
         ) {
             Icon(
-                imageVector = Icons.Outlined.Logout,
+                imageVector = Icons.AutoMirrored.Outlined.Logout,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
             )

@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import me.mudkip.moememos.data.local.entity.MemoEntity
@@ -56,8 +56,7 @@ import java.time.format.FormatStyle
 
 private data class ExploreMemoWithUser(
     val memo: MemoEntity,
-    val username: String,
-    val userAvatar: String? = null
+    val username: String
 )
 
 private val exploreMemos: List<ExploreMemoWithUser>
@@ -159,7 +158,7 @@ private fun ExplorePageContent(
     ) { innerPadding ->
         if (memos.isEmpty()) {
             EmptyExploreContent(
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             )
@@ -226,7 +225,9 @@ private fun ExploreMemoCard(
                     Text(
                         text = username,
                         style = MoeTypography.label,
-                        color = colors.textPrimary
+                        color = colors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         text = remember(memo.date) {
@@ -235,7 +236,9 @@ private fun ExploreMemoCard(
                                 .format(memo.date.atZone(ZoneId.systemDefault()))
                         },
                         style = MoeTypography.caption,
-                        color = colors.textTertiary
+                        color = colors.textTertiary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
 

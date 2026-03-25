@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.ui.designsystem.token.MoeMotion
 import me.mudkip.moememos.ui.designsystem.token.MoeElevation
@@ -86,10 +87,13 @@ fun SettingItem(
             Text(
                 text,
                 style = MoeTypography.title,
-                color = colors.textPrimary
+                color = colors.textPrimary,
+                modifier = Modifier.weight(1f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
             if (trailingIcon != null) {
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.width(MoeSpacing.md))
                 trailingIcon()
             }
         }

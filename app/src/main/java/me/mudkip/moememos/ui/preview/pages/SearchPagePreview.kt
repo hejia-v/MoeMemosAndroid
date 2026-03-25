@@ -163,12 +163,14 @@ private fun SearchPageContent(
             if (results.isEmpty() && currentSearchText.text.isNotEmpty()) {
                 NoResultsContent(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
                         .weight(1f)
                 )
             } else if (results.isNotEmpty()) {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(MoeSpacing.xs)
                 ) {
                     items(results) { memo ->
@@ -178,7 +180,7 @@ private fun SearchPageContent(
             } else {
                 EmptySearchHint(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
                         .weight(1f)
                 )
             }

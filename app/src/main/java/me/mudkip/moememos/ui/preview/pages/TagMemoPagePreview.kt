@@ -2,7 +2,6 @@ package me.mudkip.moememos.ui.preview.pages
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -140,7 +139,7 @@ private fun TagMemoPageContent(
         if (memos.isEmpty()) {
             EmptyTagContent(
                 tag = tag,
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             )

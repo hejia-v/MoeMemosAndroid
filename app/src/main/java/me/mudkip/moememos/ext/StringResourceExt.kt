@@ -8,4 +8,8 @@ import me.mudkip.moememos.MoeMemosApp
  * To support i18n
  * @author Xeu<thankrain@qq.com>
  */
-val Int.string get() = MoeMemosApp.CONTEXT.getString(this)
+val Int.string get() = try {
+    MoeMemosApp.CONTEXT.getString(this)
+} catch (e: Exception) {
+    ""
+}
