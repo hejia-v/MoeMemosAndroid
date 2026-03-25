@@ -2,6 +2,7 @@ package me.mudkip.moememos.ui.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +50,7 @@ fun MemoContent(
     selectable: Boolean = false,
     onTagClick: ((String) -> Unit)? = null
 ) {
-    val rootNavController = LocalRootNavController.current
+    val isPreview = previewMode || LocalInspectionMode.current
     val colors = MoeDesignTokens.colors
     val (text, previewed) = remember(memo.content, previewMode) {
         if (previewMode) {
@@ -57,12 +59,22 @@ fun MemoContent(
             Pair(memo.content, false)
         }
     }
-    val handleTagClick = remember(rootNavController, onTagClick) {
-        onTagClick ?: { tag ->
-            rootNavController.navigate("${RouteName.TAG}/${URLEncoder.encode(tag, "UTF-8")}") {
-                launchSingleTop = true
-                restoreState = true
-            }
+    val rootNavController = if (isPreview || onTagClick != null) {
+        null
+    } else {
+        LocalRootNavController.current
+    }
+    val handleTagClick: (String) -> Unit = remember(rootNavController, onTagClick, isPreview) {
+        when {
+            onTagClick != null -> onTagClick
+            isPreview -> ({ _: String -> Unit })
+            else -> ({ tag: String ->
+                rootNavController?.navigate("${RouteName.TAG}/${URLEncoder.encode(tag, "UTF-8")}") {
+                    launchSingleTop = true
+                    restoreState = true
+                }
+                Unit
+            })
         }
     }
 
@@ -75,7 +87,7 @@ fun MemoContent(
     ) {
         Markdown(
             text,
-            imageBaseUrl = LocalUserState.current.host,
+            imageBaseUrl = if (isPreview) null else LocalUserState.current.host,
             checkboxChange = checkboxChange,
             selectable = selectable,
             onTagClick = handleTagClick
@@ -259,22 +271,27 @@ fun MemoResourceContent(memo: MemoRepresentable) {
     if (imageList.isNotEmpty()) {
         val rows = ceil(imageList.size.toFloat() / cols).toInt()
         for (rowIndex in 0 until rows) {
-            Row {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = if (rowIndex == 0) 0.dp else 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 for (colIndex in 0 until cols) {
                     val index = rowIndex * cols + colIndex
                     if (index < imageList.size) {
-                        Box(modifier = Modifier.fillMaxWidth(1f / (cols - colIndex))) {
+                        Box(modifier = Modifier.weight(1f)) {
                             MemoImage(
                                 url = imageList[index].localUri ?: imageList[index].uri,
                                 modifier = Modifier
+                                    .fillMaxWidth()
                                     .aspectRatio(1f)
-                                    .padding(2.dp)
                                     .clip(RoundedCornerShape(4.dp)),
                                 resourceIdentifier = (imageList[index] as? ResourceEntity)?.identifier
                             )
                         }
                     } else {
-                        Spacer(modifier = Modifier.fillMaxWidth(1f / cols))
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
