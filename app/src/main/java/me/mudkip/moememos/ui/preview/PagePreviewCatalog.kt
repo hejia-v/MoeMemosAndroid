@@ -1,7 +1,9 @@
 package me.mudkip.moememos.ui.preview
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -9,11 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import me.mudkip.moememos.ui.designsystem.foundation.MoeDesignTokens
 import me.mudkip.moememos.ui.designsystem.token.MoeSpacing
 import me.mudkip.moememos.ui.designsystem.token.MoeTypography
@@ -54,6 +59,24 @@ private fun PagePreviewLabel(label: String) {
     )
 }
 
+/**
+ * A wrapper to provide a fixed height for page previews.
+ * This resolves the IllegalStateException: Vertically scrollable component was measured with an infinity maximum height constraints.
+ */
+@Composable
+private fun PreviewWrapper(content: @Composable () -> Unit) {
+    val colors = MoeDesignTokens.colors
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(640.dp)
+            .clip(RoundedCornerShape(MoeSpacing.md))
+            .border(1.dp, colors.strokeSubtle, RoundedCornerShape(MoeSpacing.md))
+    ) {
+        content()
+    }
+}
+
 // ==================== Main Catalog ====================
 
 @PreviewLightDark
@@ -88,92 +111,92 @@ fun AllPagesPreviewCatalog() {
 
             // Memos Home Page
             PagePreviewLabel("MemosHomePage - Data State")
-            MemosHomePagePreview_DataState()
+            PreviewWrapper { MemosHomePagePreview_DataState() }
 
             PagePreviewLabel("MemosHomePage - Empty State")
-            MemosHomePagePreview_EmptyState()
+            PreviewWrapper { MemosHomePagePreview_EmptyState() }
 
             // Archived Memo Page
             PagePreviewLabel("ArchivedMemoPage - Data State")
-            ArchivedMemoPagePreview_DataState()
+            PreviewWrapper { ArchivedMemoPagePreview_DataState() }
 
             PagePreviewLabel("ArchivedMemoPage - Empty State")
-            ArchivedMemoPagePreview_EmptyState()
+            PreviewWrapper { ArchivedMemoPagePreview_EmptyState() }
 
             // Search Page
             PagePreviewLabel("SearchPage - With Results")
-            SearchPagePreview_WithResults()
+            PreviewWrapper { SearchPagePreview_WithResults() }
 
             PagePreviewLabel("SearchPage - No Results")
-            SearchPagePreview_NoResults()
+            PreviewWrapper { SearchPagePreview_NoResults() }
 
             // Tag Memo Page
             PagePreviewLabel("TagMemoPage - With Memos")
-            TagMemoPagePreview_WithMemos()
+            PreviewWrapper { TagMemoPagePreview_WithMemos() }
 
             PagePreviewLabel("TagMemoPage - Empty Tag")
-            TagMemoPagePreview_EmptyTag()
+            PreviewWrapper { TagMemoPagePreview_EmptyTag() }
 
             // Explore Page
             PagePreviewLabel("ExplorePage - With Public Memos")
-            ExplorePagePreview_WithPublicMemos()
+            PreviewWrapper { ExplorePagePreview_WithPublicMemos() }
 
             PagePreviewLabel("ExplorePage - Empty State")
-            ExplorePagePreview_EmptyState()
+            PreviewWrapper { ExplorePagePreview_EmptyState() }
 
             // Memo Input Page
             PagePreviewLabel("MemoInputPage - New Memo (Empty)")
-            MemoInputPagePreview_NewMemoEmpty()
+            PreviewWrapper { MemoInputPagePreview_NewMemoEmpty() }
 
             PagePreviewLabel("MemoInputPage - New Memo (With Content)")
-            MemoInputPagePreview_NewMemoWithContent()
+            PreviewWrapper { MemoInputPagePreview_NewMemoWithContent() }
 
             PagePreviewLabel("MemoInputPage - Edit Mode")
-            MemoInputPagePreview_EditMode()
+            PreviewWrapper { MemoInputPagePreview_EditMode() }
 
             // ==================== ACCOUNT PAGES ====================
             CatalogSectionTitle("👤 Account Pages")
 
             // Add Account Page
             PagePreviewLabel("AddAccountPage - First Account")
-            AddAccountPagePreview_FirstAccount()
+            PreviewWrapper { AddAccountPagePreview_FirstAccount() }
 
             PagePreviewLabel("AddAccountPage - Add Another Account")
-            AddAccountPagePreview_AddAnotherAccount()
+            PreviewWrapper { AddAccountPagePreview_AddAnotherAccount() }
 
             // Login Page
             PagePreviewLabel("LoginPage - Empty Form")
-            LoginPagePreview_EmptyForm()
+            PreviewWrapper { LoginPagePreview_EmptyForm() }
 
             PagePreviewLabel("LoginPage - With Input")
-            LoginPagePreview_WithInput()
+            PreviewWrapper { LoginPagePreview_WithInput() }
 
             // Account Page
             PagePreviewLabel("AccountPage - Local Account")
-            AccountPagePreview_LocalAccount()
+            PreviewWrapper { AccountPagePreview_LocalAccount() }
 
             PagePreviewLabel("AccountPage - Memos Account")
-            AccountPagePreview_MemosAccount()
+            PreviewWrapper { AccountPagePreview_MemosAccount() }
 
             // ==================== OTHER PAGES ====================
             CatalogSectionTitle("⚙️ Other Pages")
 
             // Settings Page
             PagePreviewLabel("SettingsPage - Single Account")
-            SettingsPagePreview_SingleAccount()
+            PreviewWrapper { SettingsPagePreview_SingleAccount() }
 
             PagePreviewLabel("SettingsPage - Multiple Accounts")
-            SettingsPagePreview_MultipleAccounts()
+            PreviewWrapper { SettingsPagePreview_MultipleAccounts() }
 
             // Resource List Page
             PagePreviewLabel("ResourceListPage - Images Tab")
-            ResourceListPagePreview_ImagesTab()
+            PreviewWrapper { ResourceListPagePreview_ImagesTab() }
 
             PagePreviewLabel("ResourceListPage - Other Tab")
-            ResourceListPagePreview_OtherTab()
+            PreviewWrapper { ResourceListPagePreview_OtherTab() }
 
             PagePreviewLabel("ResourceListPage - Empty State")
-            ResourceListPagePreview_EmptyState()
+            PreviewWrapper { ResourceListPagePreview_EmptyState() }
 
             // Footer
             Spacer(modifier = Modifier.height(MoeSpacing.xxxl))
